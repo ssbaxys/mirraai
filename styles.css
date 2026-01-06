@@ -1976,6 +1976,16 @@ img[alt="Grok"], img[alt="grok--v1"] {
   align-items:center;
   gap:10px;
 }
+.tool-col{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.tool-col-center{
+  align-items:center;
+  text-align:center;
+}
+
 .tool-ico{
   width:18px;
   height:18px;
@@ -1985,6 +1995,13 @@ img[alt="Grok"], img[alt="grok--v1"] {
   color: rgba(255,255,255,0.75);
   flex: 0 0 auto;
 }
+.tool-ico.photo{
+  width:20px;
+  height:20px;
+  color: rgba(255,255,255,0.92);
+}
+.tool-ico.photo svg{ width:100%; height:100%; display:block; }
+
 .tool-ico.spin{
   animation: toolSpin 1.2s ease-in-out infinite;
 }
@@ -2023,6 +2040,10 @@ img[alt="Grok"], img[alt="grok--v1"] {
   position: relative;
   overflow: hidden;
   transform: translateZ(0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate; /* важное: слои и mix-blend не перекрывают контент */
 
   /* статичный мягкий диагональный градиент */
   background: linear-gradient(135deg,
@@ -2038,6 +2059,62 @@ img[alt="Grok"], img[alt="grok--v1"] {
   margin-top: 0;
 }
 
+/* Контент внутри квадрата генерации (поверх всего) */
+.gen-image-placeholder .gen-overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  pointer-events: none;
+  padding: 16px;
+}
+
+.gen-image-placeholder .gen-ico{
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.98);
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,0.60));
+}
+.gen-image-placeholder .gen-ico svg{
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.gen-image-placeholder .gen-text{
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+/* Сделаем shimmer-текст внутри квадрата более "белым" */
+.gen-image-placeholder .tool-shimmer-text{
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.60) 0%,
+    rgba(255,255,255,0.82) 22%,
+    rgba(255,255,255,1) 48%,
+    rgba(255,255,255,0.78) 72%,
+    rgba(255,255,255,0.60) 100%
+  );
+  background-size: 520% 520%;
+  text-shadow: 0 10px 22px rgba(0,0,0,0.70);
+}
+
+/* Важно: точки "..." не должны становиться прозрачными из-за background-clip */
+.tool-shimmer-text .tool-dots{
+  -webkit-text-fill-color: rgba(255,255,255,0.95) !important;
+  color: rgba(255,255,255,0.95) !important;
+}
+
 /* лёгкая пульсация яркости/прозрачности без движения фона */
 @keyframes genPlaceholderPulse {
   0%   { opacity: 0.82; filter: brightness(0.95); }
@@ -2045,18 +2122,19 @@ img[alt="Grok"], img[alt="grok--v1"] {
   100% { opacity: 0.82; filter: brightness(0.95); }
 }
 
-/* дополнительное размытие поверх, чтобы любые тайлы превратились в гладкие пятна */
+/* дополнительное размытие поверх, но под оверлеем (чтобы не скрывало текст/иконку) */
 .gen-image-placeholder::after{
   content:"";
   position:absolute;
   inset:-6px;
+  z-index: 1;
   pointer-events:none;
   background:
     radial-gradient(circle at 18% 12%, rgba(255,255,255,0.045), transparent 55%),
     radial-gradient(circle at 82% 88%, rgba(255,255,255,0.035), transparent 60%);
   mix-blend-mode: overlay;
   opacity: 0.55;
-  filter: blur(10px);
+  filter: blur(12px);
 }
 
 /* изображение в модальном просмотре */
@@ -2077,7 +2155,6 @@ img[alt="Grok"], img[alt="grok--v1"] {
   font-weight: 800;
   letter-spacing: 0.02em;
   transform: translateZ(0);
-  /* поверх текста тоже добавим мягкое размытие фона, чтобы убрать ощущение квадрата */
 }
 .tool-shimmer-text::after{
   content: "";
@@ -2092,7 +2169,6 @@ img[alt="Grok"], img[alt="grok--v1"] {
   opacity: 0.7;
 }
 .tool-shimmer-text{
-  /* same softness as image shimmer */
   background: linear-gradient(135deg,
     rgba(255,255,255,0.30) 0%,
     rgba(255,255,255,0.42) 20%,
@@ -2105,6 +2181,11 @@ img[alt="Grok"], img[alt="grok--v1"] {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* JS-shimmer engine sets --shx/--shy on .shimmer-live */
+.tool-shimmer-text.shimmer-live{
+  background-position: var(--shx, 0px) var(--shy, 0px);
 }
 /* three dots animation for "Создание" */
 .tool-dots{ display:inline-block; width: 18px; text-align:left; }

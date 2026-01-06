@@ -627,7 +627,8 @@ window.openChat = (id) => {
 const TOOL_ICONS = {
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>`,
   code: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M10 19l4-14"/></svg>`,
-  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`
 };
 
 function renderToolCard(msg) {
@@ -642,6 +643,7 @@ function renderToolCard(msg) {
 
   // SEARCH
   if (tool === 'search') {
+    // Вернули “как раньше”: переливающийся текст (shimmer-live)
     if (state === 'running') {
       return `
         <div class="tool-card tool-search">
@@ -691,10 +693,11 @@ function renderToolCard(msg) {
 
   // IMAGE
   if (tool === 'image') {
+    // Вернули “как раньше”: просто квадрат 1:1 (без текста/иконки внутри)
     if (state === 'running' || state === 'pending') {
       return `
         <div class="tool-card tool-image">
-          <div class="tool-body">
+          <div class="tool-body tool-col tool-col-center">
             <div class="gen-image-placeholder" aria-hidden="true"></div>
           </div>
         </div>
@@ -1010,10 +1013,25 @@ function renderModelSelector() {
   const el = $('#model-selector');
   if (!el) return;
   const m = getSafeModel(currentModel);
+  const available = getModelAvailability(m.id);
+
+  let badgeClass;
+  let badgeLabel;
+  if (!available) {
+    badgeClass = 'unavailable';
+    badgeLabel = 'Недоступно';
+  } else if (m.isPro) {
+    badgeClass = 'pro';
+    badgeLabel = 'PRO';
+  } else {
+    badgeClass = 'free';
+    badgeLabel = 'FREE';
+  }
+
   el.innerHTML = `
     <div class="model-selector-icon">${ICONS[m.icon]}</div>
     <div class="model-selector-name">${escapeHTML(m.name)}</div>
-    <div class="badge ${m.isPro ? 'pro' : 'free'}">${m.isPro ? 'PRO' : 'FREE'}</div>
+    <div class="badge ${badgeClass}">${badgeLabel}</div>
     <div class="model-selector-arrow"></div>
   `;
 }
@@ -1022,6 +1040,38 @@ function getModelAvailability(id) {
   const map = DB.getModelAvailability();
   if (map && typeof map === 'object' && id in map) return !!map[id];
   return true;
+}
+
+// Авто-подбор доступной модели для пользователя
+function autoPickModelForUser(user, preferredId) {
+  const plan = (user?.plan || 'free').toLowerCase();
+  const allModels = Object.values(MODELS);
+
+  // Если предпочитаемая модель ещё доступна и подходит по плану — оставляем её
+  if (preferredId && MODELS[preferredId]) {
+    const pm = MODELS[preferredId];
+    const available = getModelAvailability(pm.id);
+    const allowedByPlan = plan === 'pro' || !pm.isPro;
+    if (available && allowedByPlan) return preferredId;
+  }
+
+  // Список доступных моделей по карте доступности
+  const freeAvail = allModels.filter(m => getModelAvailability(m.id) && !m.isPro);
+  const proAvail  = allModels.filter(m => getModelAvailability(m.id) &&  m.isPro);
+
+  // Для PRO-пользователя сначала пробуем PRO, потом FREE
+  if (plan === 'pro') {
+    if (proAvail.length) return proAvail[0].id;
+    if (freeAvail.length) return freeAvail[0].id;
+  }
+
+  // Для FREE-пользователя — только FREE, если нет ни одной доступной FREE, берём любую доступную
+  if (freeAvail.length) return freeAvail[0].id;
+  const anyAvail = allModels.find(m => getModelAvailability(m.id));
+  if (anyAvail) return anyAvail.id;
+
+  // На самый крайний случай — дефолтная модель
+  return 'mistral-small-3.2';
 }
 
 window.toggleModelDropdown = (e) => {
@@ -1364,15 +1414,50 @@ function renderUsersTable() {
   const users = DB.getUsers();
   body.innerHTML = users.map(u => `
     <tr>
-      <td>${escapeHTML(u.nickname)}</td>
+      <td>
+        <div class="user-cell">
+          <div class="user-cell-avatar">${escapeHTML((u.avatar || (u.nickname||'?')[0] || 'U').toUpperCase())}</div>
+          <div>
+            <div class="user-cell-name">${escapeHTML(u.visibleName || u.nickname || 'Без имени')}</div>
+            <div class="user-cell-date">@${escapeHTML(u.nickname || '')} · ID: ${escapeHTML(u.id || '')}</div>
+          </div>
+        </div>
+      </td>
       <td><span class="badge ${(u.plan || 'free')}">${escapeHTML((u.plan || 'free').toUpperCase())}</span></td>
       <td>
-        <button class="btn small primary" onclick="window.openGodMode('${u.id}')">God Mode</button>
-        <button class="btn small danger" onclick="window.deleteUser('${u.id}')">Удалить</button>
+        <div class="action-buttons">
+          <button class="btn small primary" onclick="window.openGodMode('${u.id}')">God Mode</button>
+          <button class="btn small secondary" onclick="window.toggleUserPlan('${u.id}')">${(u.plan || 'free') === 'pro' ? 'Снять PRO' : 'Выдать PRO'}</button>
+          <button class="btn small danger" onclick="window.deleteUser('${u.id}')">Удалить</button>
+        </div>
       </td>
     </tr>
   `).join('');
 }
+
+window.toggleUserPlan = (id) => {
+  if (!ADMIN.get()) return;
+
+  // Приводим id к строке, чтобы не было проблем, если где-то id хранится как число
+  const targetId = String(id);
+
+  const users = DB.getUsers().map(u => {
+    const uid = String(u.id ?? '');
+    if (uid !== targetId) return u;
+    const cur = (u.plan || 'free');
+    const nextPlan = cur === 'pro' ? 'free' : 'pro';
+    return { ...u, plan: nextPlan };
+  });
+
+  DB.setUsers(users);
+
+  // Показать понятный тост, чтобы было видно, что действие сработало
+  const updated = users.find(u => String(u.id ?? '') === targetId);
+  if (updated) {
+    const isPro = (updated.plan || 'free') === 'pro';
+    showToast(`${updated.visibleName || updated.nickname || 'Пользователь'} теперь ${isPro ? 'PRO' : 'FREE'}`, 'success');
+  }
+};
 
 window.deleteUser = (id) => {
   if (!ADMIN.get()) return;
@@ -1393,9 +1478,21 @@ function renderAdminModels() {
   const wrap = $('#admin-models');
   if (!wrap) return;
   const avail = DB.getModelAvailability();
-  const models = Object.values(MODELS).slice().sort((a,b)=> (a.isPro - b.isPro) || a.name.localeCompare(b.name));
+
+  // FREE available, PRO available, then unavailable
+  const all = Object.values(MODELS).map(m => ({ ...m, available: (m.id in avail) ? !!avail[m.id] : true }));
+  const freeAvail = all.filter(m => m.available && !m.isPro);
+  const proAvail  = all.filter(m => m.available &&  m.isPro);
+  const unavail   = all.filter(m => !m.available);
+
+  freeAvail.sort((a,b) => a.name.localeCompare(b.name));
+  proAvail.sort((a,b)  => a.name.localeCompare(b.name));
+  unavail.sort((a,b)   => a.name.localeCompare(b.name));
+
+  const models = [...freeAvail, ...proAvail, ...unavail];
+
   wrap.innerHTML = models.map(m => {
-    const on = (m.id in avail) ? !!avail[m.id] : true;
+    const on = m.available;
     return `
       <div class="model-admin-row">
         <div class="model-admin-left">
