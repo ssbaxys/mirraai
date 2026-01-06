@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат — Mirra AI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="preload" href="styles.css" as="style">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body onload="window.initChat()">
+  <div class="chat-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header"><div class="sidebar-logo">Mirra AI</div></div>
+      <div class="sidebar-controls">
+        <button class="btn primary" onclick="window.createChat()" style="width:100%;">+ Новый диалог</button>
+        <div id="chat-list" class="chat-list"></div>
+      </div>
+      <div class="profile-section">
+        <div class="profile-btn" onclick="window.openModal('profile-modal')">
+          <div class="profile-avatar user-avatar">U</div>
+          <div class="profile-info">
+            <div class="profile-name user-name">User</div>
+            <div class="profile-plan user-plan">FREE</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="chat-main">
+      <header class="chat-header">
+        <div id="model-selector" class="model-selector" onclick="window.toggleModelDropdown(event)"></div>
+        <button class="btn secondary small admin-only" style="display:none" onclick="window.enterAdmin()">Админ-панель</button>
+        <div id="model-dropdown" class="model-dropdown"></div>
+      </header>
+
+      <div class="messages-wrapper">
+        <div id="welcome-screen"><h2>Mirra AI</h2><p>Начните новый диалог</p></div>
+        <div id="messages-area" class="hidden"><div id="messages-container"></div></div>
+      </div>
+
+      <div class="input-area">
+        <!-- Статус "ИИ думает" / Real-Time Print для пользователя -->
+        <div id="thinking-status" class="thinking-status hidden"></div>
+        <div class="input-wrapper">
+          <div id="file-preview"></div>
+          <div class="input-row">
+            <textarea id="message-input" placeholder="Напишите сообщение..." rows="1" maxlength="2000"></textarea>
+            <div class="input-actions">
+              <input type="file" id="file-input" hidden multiple>
+              <button class="btn-icon" onclick="$('#file-input').click()" title="Прикрепить файлы (до 3 МБ каждый)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48"/></svg>
+              </button>
+              <button class="btn primary small" onclick="window.sendMessage()">Отправить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profile-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Профиль</h2>
+        <button class="btn-icon" onclick="closeModal('profile-modal')">×</button>
+      </div>
+      
+      <div class="profile-card">
+        <div class="profile-avatar-large user-avatar">U</div>
+        <div class="profile-card-info">
+          <div class="profile-card-name user-display-name">User</div>
+          <div class="profile-card-nickname">@<span class="user-nickname">user</span></div>
+          <div class="profile-card-id">ID: <span class="user-id">00000</span></div>
+        </div>
+        <div class="profile-card-plan"><span class="user-plan badge">FREE</span></div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn secondary" onclick="window.openChangeNickModal()">Изменить имя</button>
+        <button class="btn secondary" onclick="window.openChangePasswordModal()">Сменить пароль</button>
+        <button class="btn secondary" onclick="window.openTickets()">Тикеты</button>
+        <button class="btn secondary" onclick="openModal('terms-modal')">Условия использования</button>
+
+        <!-- Admin access via password gate (no admin account) -->
+        <button class="btn secondary admin-enter-only" onclick="window.openAdminGate()">Войти в админ-панель</button>
+        <a href="admin.html" class="btn secondary admin-only hidden">Открыть админ-панель</a>
+        <button class="btn secondary admin-only hidden" onclick="window.exitAdmin()">Выйти из админ-панели</button>
+
+        <button class="btn danger" onclick="window.openDeleteAccountModal()">Удалить аккаунт</button>
+        <button class="btn ghost" onclick="logout()">Выйти из аккаунта</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Nick Modal -->
+  <div id="change-nick-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Изменить имя</h2>
+        <button class="btn-icon" onclick="closeModal('change-nick-modal')">×</button>
+      </div>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Это имя будет отображаться вместо вашего никнейма. Оставьте пустым, чтобы использовать никнейм.</p>
+      <div class="input-group" style="margin-bottom:16px;">
+        <input id="new-visible-name" class="input-field" type="text" placeholder="Отображаемое имя">
+      </div>
+      <button class="btn primary" style="width:100%;" onclick="window.saveVisibleName()">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="change-password-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Сменить пароль</h2>
+        <button class="btn-icon" onclick="closeModal('change-password-modal')">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="input-group">
+          <input id="old-password" class="input-field" type="password" placeholder="Текущий пароль">
+        </div>
+        <div class="input-group">
+          <input id="new-password" class="input-field" type="password" placeholder="Новый пароль">
+        </div>
+        <div class="input-group">
+          <input id="confirm-new-password" class="input-field" type="password" placeholder="Подтвердите новый пароль">
+        </div>
+        <button class="btn primary" style="width:100%;" onclick="window.saveNewPassword()">Сменить пароль</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div id="delete-account-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Удалить аккаунт</h2>
+        <button class="btn-icon" onclick="closeModal('delete-account-modal')">×</button>
+      </div>
+      <p style="color:#ff6b7a;margin-bottom:16px;font-size:14px;">⚠️ Это действие необратимо! Все ваши данные, чаты и сообщения будут удалены навсегда.</p>
+      <div class="input-group" style="margin-bottom:16px;">
+        <input id="delete-password" class="input-field" type="password" placeholder="Введите пароль для подтверждения">
+      </div>
+      <button class="btn danger" style="width:100%;" onclick="window.confirmDeleteAccount()">Удалить аккаунт навсегда</button>
+    </div>
+  </div>
+
+  <!-- Terms Modal -->
+  <!-- Tickets Modal -->
+  <div id="tickets-modal" class="modal-overlay">
+    <div class="modal god-modal" style="max-width:1000px;">
+      <div class="god-sidebar">
+        <div class="god-sidebar-header">
+          <span class="god-sidebar-title">Тикеты</span>
+          <button class="btn-icon" onclick="closeModal('tickets-modal')">×</button>
+        </div>
+        <div style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.06);">
+          <button class="btn primary small" style="width:100%;" onclick="window.createTicket()">+ Создать тикет</button>
+        </div>
+        <div id="tickets-list" class="god-chats"></div>
+      </div>
+
+      <div class="god-main">
+        <div id="tickets-empty" class="god-empty-state"><p>Выберите тикет слева</p></div>
+
+        <div id="ticket-view" class="hidden" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="min-width:0;">
+              <div id="ticket-title" class="font-unbounded" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Тикет</div>
+              <div id="ticket-status" style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Статус: —</div>
+            </div>
+            <button id="ticket-cancel-btn" class="btn danger small" onclick="window.cancelCurrentTicket()">Отменить</button>
+          </div>
+
+          <div id="ticket-messages" class="god-messages"></div>
+
+          <div class="input-area" style="padding:16px;border-top:1px solid rgba(255,255,255,0.06);">
+            <div class="input-wrapper" style="max-width:none;">
+              <div id="ticket-file-preview"></div>
+              <div class="input-row">
+                <textarea id="ticket-input" placeholder="Сообщение в тикет..." rows="1" maxlength="2000"></textarea>
+                <div class="input-actions">
+                  <input type="file" id="ticket-file-input" hidden multiple onchange="window.handleTicketFileSelect(event)">
+                  <button class="btn-icon" onclick="document.getElementById('ticket-file-input').click()" title="Прикрепить файл (до 3 МБ)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48"/></svg>
+                  </button>
+                  <button id="ticket-send-btn" class="btn primary small" onclick="window.sendTicketMessage()" title="Отправить">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="input-meta">
+                <span id="ticket-char-count" class="input-meta-text">0/2000</span>
+                <span id="ticket-cooldown" class="input-meta-text"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Gate Modal -->
+  <div id="admin-gate-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Админ‑панель</h2>
+        <button class="btn-icon" onclick="closeModal('admin-gate-modal')">×</button>
+      </div>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Введите пароль для доступа к админ‑панели.</p>
+      <div class="input-group" style="margin-bottom:16px;">
+        <input id="admin-gate-password" class="input-field" type="password" placeholder="Пароль">
+      </div>
+      <button class="btn primary" style="width:100%;" onclick="window.enterAdmin()">Войти</button>
+    </div>
+  </div>
+
+  <div id="terms-modal" class="modal-overlay">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Условия использования</h2>
+        <button class="btn-icon" onclick="closeModal('terms-modal')">×</button>
+      </div>
+      
+      <div class="terms-content">
+        <p>Добро пожаловать в Mirra AI. Используя наш сервис, вы соглашаетесь со следующими условиями:</p>
+        
+        <h3>1. Общие положения</h3>
+        <p>Mirra AI предоставляет доступ к различным моделям искусственного интеллекта для генерации текста и изображений. Сервис предоставляется «как есть» без каких-либо гарантий.</p>
+        
+        <h3>2. Использование сервиса</h3>
+        <p>Вы обязуетесь не использовать сервис для создания незаконного, вредоносного или оскорбительного контента. Мы оставляем за собой право заблокировать доступ при нарушении правил.</p>
+        
+        <h3>3. Интеллектуальная собственность</h3>
+        <p>Контент, созданный с помощью Mirra AI, принадлежит вам, однако мы не несём ответственности за его использование третьими лицами.</p>
+        
+        <h3>4. Подписки и платежи</h3>
+        <p>PRO-функции доступны только пользователям с активной подпиской. Отмена подписки не влечёт возврат средств за текущий период.</p>
+        
+        <h3>5. Ограничение ответственности</h3>
+        <p>Mirra AI не несёт ответственности за любые убытки, связанные с использованием сервиса. ИИ-модели могут допускать ошибки — всегда проверяйте важную информацию.</p>
+        
+        <h3>6. Конфиденциальность</h3>
+        <p>Мы храним ваши данные в соответствии с политикой конфиденциальности. Ваши диалоги могут использоваться для улучшения качества сервиса в анонимизированном виде.</p>
+        
+        <h3>7. Изменения условий</h3>
+        <p>Мы можем изменять эти условия в любое время. Продолжая использовать сервис после изменений, вы принимаете новые условия.</p>
+      </div>
+      
+      <button class="btn primary" style="width:100%;margin-top:20px;" onclick="closeModal('terms-modal')">Понятно</button>
+    </div>
+  </div>
+
+  <!-- Coding Result Modal (user) -->
+  <div id="coding-result-modal" class="modal-overlay">
+    <div class="modal" style="max-width:720px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="coding-result-title">Создано</h2>
+        <button class="btn-icon" onclick="closeModal('coding-result-modal')">×</button>
+      </div>
+      <div class="input-group" style="height:360px;">
+        <pre id="coding-result-body" class="input-field" style="height:360px;white-space:pre;overflow:auto;background:rgba(0,0,0,0.25);"></pre>
+      </div>
+      <button class="btn secondary" style="width:100%;margin-top:12px;" onclick="navigator.clipboard?.writeText?.(document.getElementById('coding-result-body')?.textContent||'');window.showToast('Скопировано','success');">Скопировать</button>
+    </div>
+  </div>
+
+  <!-- Image Viewer Modal (user) -->
+  <div id="image-viewer-modal" class="modal-overlay">
+    <div class="modal" style="max-width:900px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Просмотр изображения</h2>
+        <button class="btn-icon" onclick="closeModal('image-viewer-modal')">×</button>
+      </div>
+      <img id="image-viewer-img" class="image-modal-img" src="" alt="Изображение">
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
