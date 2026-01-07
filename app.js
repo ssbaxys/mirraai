@@ -2,6 +2,24 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// ==================== MODAL (EARLY EXPORT) ====================
+// Экспортируем openModal/closeModal ДО инициализации DB, чтобы они были доступны сразу
+const openModal = async (id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('active');
+  if (id === 'auth-modal') {
+    await window.toggleAuthMode?.('login');
+  }
+};
+const closeModal = (id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('active');
+};
+window.openModal = openModal;
+window.closeModal = closeModal;
+
 // ==================== CONFIG ====================
 const firebaseConfig = {
   apiKey: "AIzaSyD2uNJ45g49PXxXyKZjW-2HI1hZrViPLr4",
@@ -74,16 +92,7 @@ const escapeHTML = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({
   "'": '&#39;'
 }[c]));
 
-// Глобальный режим сортировки чатов
-let chatSortMode = 'date'; // date | alpha | messages
-window.selectChatSort = (mode) => {
-  chatSortMode = mode;
-  renderChatList();
-  const btn = $('#sort-selected-label');
-  if (btn) {
-    btn.textContent = mode === 'date' ? 'Сначала новые' : (mode === 'alpha' ? 'По алфавиту' : 'По сообщениям');
-  }
-};
+// Дубликат удален - chatSortMode уже объявлен выше на строке 55
 
 function showToast(msg, type = 'info') {
   const t = $('#toast');
@@ -343,24 +352,8 @@ const DB = {
 };
 
 // ==================== MODALS ====================
-// IMPORTANT: this file is a JS module. If we only set window.openModal, the identifier
-// "openModal" is NOT available in module scope and any internal calls like openModal(...)
-// will throw ReferenceError. So we define real functions and also export them to window.
-const openModal = async (id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.add('active');
-  if (id === 'auth-modal') {
-    await window.toggleAuthMode('login');
-  }
-};
-const closeModal = (id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.remove('active');
-};
-window.openModal = openModal;
-window.closeModal = closeModal;
+// IMPORTANT: openModal/closeModal уже экспортированы в начале файла (строки 7-21)
+// чтобы они были доступны сразу, до инициализации DB
 
 // ==================== AUTH UI ====================
 window.toggleAuthMode = async (mode) => {
@@ -2669,6 +2662,13 @@ window.__mirraBoot = (async function boot() {
   if (path === '/' || path.includes('index.html')) window.initIndex();
 })();
 
+// export for inline handlers
+window.DB = DB;
+window.ICONS = ICONS;
+window.MODELS = MODELS;
+window.showToast = showToast;
+window.getSafeModel = getSafeModel;
+
 // ==================== INDEX PAGE ====================
 window.initIndex = function() {
   if (window.__indexInited) return;
@@ -2681,11 +2681,5 @@ window.initIndex = function() {
   }
 
   // Страница уже готова, модальные окна работают
+  console.log('Index page initialized, openModal available:', typeof window.openModal);
 };
-
-// export for inline handlers
-window.DB = DB;
-window.ICONS = ICONS;
-window.MODELS = MODELS;
-window.showToast = showToast;
-window.getSafeModel = getSafeModel;

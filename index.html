@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<script>
+  // Резервируем имена функций в глобальном пространстве
+  window.openModal = window.openModal || function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  };
+  window.closeModal = window.closeModal || function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  };
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mirra AI — Платформа нового поколения</title>
