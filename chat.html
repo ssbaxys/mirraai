@@ -44,9 +44,25 @@
       </div>
 
       <div class="input-area">
-        <!-- Статус "ИИ думает" / Real-Time Print для пользователя -->
+        <!-- Статус "ИИ думает" -->
         <div id="thinking-status" class="thinking-status hidden"></div>
         <div class="input-wrapper">
+          <!-- Панель инструментов пользователя -->
+          <div class="user-tools-bar">
+            <button class="tool-btn" id="tool-search" onclick="window.selectUserTool('search')" title="Поиск">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            </button>
+            <button class="tool-btn" id="tool-code" onclick="window.selectUserTool('code')" title="Кодинг">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M10 19l4-14"/></svg>
+            </button>
+            <button class="tool-btn" id="tool-image" onclick="window.selectUserTool('image')" title="Фото">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </button>
+            <button class="tool-btn" id="tool-music" onclick="window.selectUserTool('music')" title="Музыка">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </button>
+          </div>
+
           <div id="file-preview"></div>
           <div class="input-row">
             <textarea id="message-input" placeholder="Напишите сообщение..." rows="1" maxlength="2000"></textarea>
@@ -281,8 +297,38 @@
     </div>
   </div>
 
+  <!-- Rename Folder Modal -->
+  <div id="rename-folder-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Переименовать папку</h2>
+        <button class="btn-icon" onclick="closeModal('rename-folder-modal')">×</button>
+      </div>
+      <div class="input-group" style="margin-bottom:16px;">
+        <input id="rename-folder-input" class="input-field" type="text" placeholder="Название папки" maxlength="50">
+      </div>
+      <button class="btn primary" style="width:100%;" onclick="window.confirmRenameFolder()">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Folder Modal -->
+  <div id="confirm-delete-folder-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Удалить папку?</h2>
+        <button class="btn-icon" onclick="closeModal('confirm-delete-folder-modal')">×</button>
+      </div>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Чаты из папки не будут удалены, они переместятся в основной список.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn secondary" style="flex:1;" onclick="closeModal('confirm-delete-folder-modal')">Отмена</button>
+        <button class="btn danger" style="flex:1;" onclick="window.confirmDeleteFolder()">Удалить</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
+  <script src="mistral-integration.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

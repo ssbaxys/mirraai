@@ -31,24 +31,33 @@ const ICONS = {
 
 // ==================== MODELS ====================
 const MODELS = {
-  'gemini-3-flash': { id: 'gemini-3-flash', name: 'Gemini 3 Flash', provider: 'Google AI Studio', icon: 'google', type: 'text', isPro: false },
-  'mistral-small-3.2': { id: 'mistral-small-3.2', name: 'Mistral Small 3.2', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: false },
-  'deepseek-v3.2': { id: 'deepseek-v3.2', name: 'DeepSeek V3.2', provider: 'DeepSeek API Cloud', icon: 'deepseek', type: 'text', isPro: false },
-  'gpt-5.1-mini': { id: 'gpt-5.1-mini', name: 'GPT-5.1 Mini', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: false },
-  'claude-haiku-4.5': { id: 'claude-haiku-4.5', name: 'Claude Haiku 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: false },
-  'nano-banana': { id: 'nano-banana', name: 'Nano Banana', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: false },
-  'grok-4.1-fast': { id: 'grok-4.1-fast', name: 'Grok 4.1 Fast', provider: 'xAI', icon: 'xai', type: 'text', isPro: false },
+  'gemini-3-flash': { id: 'gemini-3-flash', name: 'Gemini 3 Flash', provider: 'Google AI Studio', icon: 'google', type: 'text', isPro: false, order: 1 },
+  'mistral-small-3.2': { id: 'mistral-small-3.2', name: 'Mistral Small 3.2', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: false, order: 2, apiId: 'mistral-small-2506' },
+  'deepseek-v3.2': { id: 'deepseek-v3.2', name: 'DeepSeek V3.2', provider: 'DeepSeek API Cloud', icon: 'deepseek', type: 'text', isPro: false, order: 3 },
+  'gpt-5.1-mini': { id: 'gpt-5.1-mini', name: 'GPT-5.1 Mini', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: false, order: 4 },
+  'claude-haiku-4.5': { id: 'claude-haiku-4.5', name: 'Claude Haiku 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: false, order: 5 },
+  'nano-banana': { id: 'nano-banana', name: 'Nano Banana', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: false, order: 6 },
+  'grok-4.1-fast': { id: 'grok-4.1-fast', name: 'Grok 4.1 Fast', provider: 'xAI', icon: 'xai', type: 'text', isPro: false, order: 7 },
 
-  'claude-opus-4.5': { id: 'claude-opus-4.5', name: 'Claude Opus 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: true },
-  'gemini-3-pro': { id: 'gemini-3-pro', name: 'Gemini 3 Pro', provider: 'Google AI Studio', icon: 'google', type: 'text', isPro: true },
-  'grok-4.1-thinking': { id: 'grok-4.1-thinking', name: 'Grok 4.1 Thinking', provider: 'xAI', icon: 'xai', type: 'text', isPro: true },
-  'mistral-large-3': { id: 'mistral-large-3', name: 'Mistral Large 3', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true },
-  'devstral-2': { id: 'devstral-2', name: 'Devstral 2', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true },
-  'gpt-5.2-pro': { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true },
-  'gpt-5.2-chat': { id: 'gpt-5.2-chat', name: 'GPT-5.2 Chat', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true },
-  'gpt-5.1-codex': { id: 'gpt-5.1-codex', name: 'GPT-5.1 Codex', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true },
-  'claude-sonnet-4.5': { id: 'claude-sonnet-4.5', name: 'Claude Sonnet 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: true },
-  'nano-banana-pro': { id: 'nano-banana-pro', name: 'Nano Banana Pro', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: true }
+  'claude-opus-4.5': { id: 'claude-opus-4.5', name: 'Claude Opus 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: true, order: 8 },
+  'gemini-3-pro': { id: 'gemini-3-pro', name: 'Gemini 3 Pro', provider: 'Google AI Studio', icon: 'google', type: 'text', isPro: true, order: 9 },
+  'grok-4.1-thinking': { id: 'grok-4.1-thinking', name: 'Grok 4.1 Thinking', provider: 'xAI', icon: 'xai', type: 'text', isPro: true, order: 10 },
+  'mistral-large-3': { id: 'mistral-large-3', name: 'Mistral Large 3', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true, order: 11, apiId: 'mistral-large-2512' },
+  'devstral-2': { id: 'devstral-2', name: 'Devstral 2', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true, order: 12, apiId: 'devstral-2512' },
+  'gpt-5.2-pro': { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true, order: 13 },
+  'gpt-5.2-chat': { id: 'gpt-5.2-chat', name: 'GPT-5.2 Chat', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true, order: 14 },
+  'gpt-5.1-codex': { id: 'gpt-5.1-codex', name: 'GPT-5.1 Codex', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true, order: 15 },
+  'claude-sonnet-4.5': { id: 'claude-sonnet-4.5', name: 'Claude Sonnet 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: true, order: 16 },
+  'nano-banana-pro': { id: 'nano-banana-pro', name: 'Nano Banana Pro', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: true, order: 17 }
+};
+
+// ==================== CHAT SORT MODE ====================
+let chatSortMode = localStorage.getItem('chatSortMode') || 'date';
+
+window.selectChatSort = (mode) => {
+  chatSortMode = mode;
+  localStorage.setItem('chatSortMode', mode);
+  renderChatList();
 };
 
 // ==================== HELPERS ====================
@@ -64,6 +73,17 @@ const escapeHTML = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({
   '"': '&quot;',
   "'": '&#39;'
 }[c]));
+
+// Глобальный режим сортировки чатов
+let chatSortMode = 'date'; // date | alpha | messages
+window.selectChatSort = (mode) => {
+  chatSortMode = mode;
+  renderChatList();
+  const btn = $('#sort-selected-label');
+  if (btn) {
+    btn.textContent = mode === 'date' ? 'Сначала новые' : (mode === 'alpha' ? 'По алфавиту' : 'По сообщениям');
+  }
+};
 
 function showToast(msg, type = 'info') {
   const t = $('#toast');
@@ -225,7 +245,8 @@ const DB = {
 
   queueCommit() {
     clearTimeout(DB._commitTimer);
-    DB._commitTimer = setTimeout(() => DB.commit(), 80);
+    // Моментальная синхронизация (30мс дебаунс для оптимизации серии вызовов)
+    DB._commitTimer = setTimeout(() => DB.commit(), 30);
   },
 
   async commit() {
@@ -505,6 +526,7 @@ let currentModel = 'mistral-large-3';
 let attachedFiles = [];
 let _chatUnsub = null;
 let _messagesHTMLCache = '';
+let selectedUserTool = null;
 
 window.initChat = function () {
   if (window.__chatInited) return;
@@ -518,6 +540,23 @@ window.initChat = function () {
       renderProfile();
       renderChatList();
       if (currentChatId) renderMessages();
+
+      // Проверяем доступность текущей модели при изменении
+      const user = DB.getCurrentUser();
+      if (user && currentChatId) {
+        const chat = DB.getChats().find(c => c.id === currentChatId);
+        if (chat) {
+          const validModel = ensureChatModelValid(chat, user);
+          if (validModel !== currentModel) {
+            currentModel = validModel;
+            const updated = DB.getChats().map(c => c.id === chat.id ? ({ ...c, model: validModel }) : c);
+            DB.setChats(updated);
+            renderModelSelector();
+            showToast('Модель переключена на доступную', 'success');
+          }
+        }
+      }
+      renderModelSelector();
     } catch (e) {
       console.error(e);
     }
@@ -576,32 +615,284 @@ function renderProfile() {
   });
 }
 
+function sortChatsForUser(chats) {
+  // сортировка по глобальному режиму
+  return chats.slice().sort((a, b) => {
+    if (chatSortMode === 'alpha') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    if (chatSortMode === 'messages') {
+      const ma = DB.getMessages().filter(m => m.chatId === a.id).length;
+      const mb = DB.getMessages().filter(m => m.chatId === b.id).length;
+      return mb - ma;
+    }
+    // date (по умолчанию): новые сверху
+    return (b.updatedAt || 0) - (a.updatedAt || 0);
+  });
+}
+
 function renderChatList() {
   const user = DB.getCurrentUser();
   const listEl = $('#chat-list');
   if (!user || !listEl) return;
 
-  const chats = DB.getChats().filter(c => c.userId === user.id).slice();
-  chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const rawChats = DB.getChats().filter(c => c.userId === user.id);
 
-  if (!chats.length) {
+  // Разбиваем на папки и чаты вне папок
+  const folders = DB.getFolders().filter(f => f.userId === user.id);
+  const folderMap = new Map();
+  folders.forEach(f => { folderMap.set(f.id, f); });
+
+  // чаты, не находящиеся в папках
+  const chatsOutside = rawChats.filter(c => !c.folderId);
+
+  const sortedOutside = sortChatsForUser(chatsOutside);
+  const sortedFolders = folders.slice().sort((a,b) => (b.updatedAt||0)-(a.updatedAt||0));
+
+  if (!rawChats.length) {
     listEl.innerHTML = '<div class="empty-state">Нет диалогов</div>';
     return;
   }
 
-  listEl.innerHTML = chats.map(chat => {
+  const renderChatItem = (chat) => {
     const model = getSafeModel(chat.model);
+    const msgsCount = DB.getMessages().filter(m => m.chatId === chat.id).length;
     return `
-      <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="window.openChat('${chat.id}')">
+      <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}"
+           draggable="true"
+           ondragstart="window.onChatDragStart(event, '${chat.id}')"
+           ondragover="window.onChatDragOver(event)"
+           ondragleave="window.onChatDragLeave(event)"
+           ondrop="window.onChatDrop(event, '${chat.id}')"
+           onclick="window.openChat('${chat.id}')">
         <div class="chat-item-icon">${ICONS[model.icon]}</div>
         <div class="chat-item-info">
           <div class="chat-item-name">${escapeHTML(chat.name || 'Диалог')}</div>
-          <div class="chat-item-model">${escapeHTML(model.name)}</div>
+          <div class="chat-item-model">${escapeHTML(model.name)} · ${msgsCount} сообщений</div>
         </div>
       </div>
     `;
-  }).join('');
+  };
+
+  const renderFolder = (folder) => {
+    const folderChats = rawChats.filter(c => c.folderId === folder.id);
+    const sortedChats = sortChatsForUser(folderChats);
+    const isOpen = folder.isOpen !== false;
+    return `
+      <div class="folder-item ${isOpen ? 'open' : ''}" draggable="true"
+           ondragstart="window.onFolderDragStart(event, '${folder.id}')"
+           ondragover="window.onChatDragOver(event)"
+           ondragleave="window.onChatDragLeave(event)"
+           ondrop="window.onFolderDrop(event, '${folder.id}')">
+        <div class="folder-header" onclick="window.toggleFolder('${folder.id}')">
+          <div class="folder-icon">${isOpen ? '📂' : '📁'}</div>
+          <div class="folder-name">${escapeHTML(folder.name || 'Папка')}</div>
+          <div class="folder-count">${folderChats.length}</div>
+          <button class="folder-edit" onclick="window.renameFolder(event, '${folder.id}')">✎</button>
+          <button class="folder-edit" onclick="window.deleteFolder(event, '${folder.id}')">🗑</button>
+        </div>
+        <div class="folder-chats ${isOpen ? '' : 'hidden'}" id="folder-${folder.id}-chats">
+          ${sortedChats.map(renderChatItem).join('') || '<div class="empty-state">Нет чатов</div>'}
+        </div>
+      </div>
+    `;
+  };
+
+  listEl.innerHTML = `
+    <div class="sidebar-sort">
+      <button class="sort-btn ${chatSortMode === 'date' ? 'active' : ''}" onclick="window.selectChatSort('date')" title="Сначала новые">📅</button>
+      <button class="sort-btn ${chatSortMode === 'alpha' ? 'active' : ''}" onclick="window.selectChatSort('alpha')" title="По алфавиту">🔤</button>
+      <button class="sort-btn ${chatSortMode === 'messages' ? 'active' : ''}" onclick="window.selectChatSort('messages')" title="По количеству">💬</button>
+    </div>
+    ${sortedOutside.map(renderChatItem).join('')}
+    ${sortedFolders.map(renderFolder).join('')}
+  `;
 }
+
+// ==================== DRAG AND DROP + FOLDERS ====================
+let draggedChatId = null;
+let draggedFolderId = null;
+
+window.onChatDragStart = (e, chatId) => {
+  draggedChatId = chatId;
+  draggedFolderId = null;
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '0.4';
+};
+
+window.onFolderDragStart = (e, folderId) => {
+  draggedFolderId = folderId;
+  draggedChatId = null;
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '0.4';
+};
+
+window.onChatDragOver = (e) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+};
+
+window.onChatDragLeave = (e) => {
+  e.currentTarget.classList.remove('drag-over');
+};
+
+window.onChatDrop = (e, targetChatId) => {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('drag-over');
+
+  if (!draggedChatId || draggedChatId === targetChatId) {
+    draggedChatId = null;
+    return;
+  }
+
+  const user = DB.getCurrentUser();
+  if (!user) return;
+
+  // Создаём папку при перетаскивании чата на чат
+  const draggedChat = DB.getChats().find(c => c.id === draggedChatId);
+  const targetChat = DB.getChats().find(c => c.id === targetChatId);
+
+  if (!draggedChat || !targetChat) return;
+
+  // Если оба чата вне папок, создаём новую папку
+  if (!draggedChat.folderId && !targetChat.folderId) {
+    const folderId = nowId();
+    const folderName = 'Новая папка';
+    const folder = {
+      id: folderId,
+      userId: user.id,
+      name: folderName,
+      isOpen: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    DB.setFolders([...DB.getFolders(), folder]);
+
+    const chats = DB.getChats().map(c => {
+      if (c.id === draggedChatId || c.id === targetChatId) {
+        return { ...c, folderId, updatedAt: Date.now() };
+      }
+      return c;
+    });
+
+    DB.setChats(chats);
+    showToast('Папка создана', 'success');
+    renderChatList();
+  }
+
+  draggedChatId = null;
+  document.querySelectorAll('.chat-item').forEach(el => el.style.opacity = '1');
+};
+
+window.onFolderDrop = (e, targetFolderId) => {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('drag-over');
+
+  if (!draggedChatId) {
+    draggedFolderId = null;
+    return;
+  }
+
+  // Перемещаем чат в папку
+  const chats = DB.getChats().map(c => {
+    if (c.id === draggedChatId) {
+      return { ...c, folderId: targetFolderId, updatedAt: Date.now() };
+    }
+    return c;
+  });
+
+  DB.setChats(chats);
+  showToast('Чат перемещён', 'success');
+  renderChatList();
+
+  draggedChatId = null;
+  document.querySelectorAll('.chat-item, .folder-item').forEach(el => el.style.opacity = '1');
+};
+
+document.addEventListener('dragend', () => {
+  draggedChatId = null;
+  draggedFolderId = null;
+  document.querySelectorAll('.chat-item, .folder-item').forEach(el => {
+    el.style.opacity = '1';
+    el.classList.remove('drag-over');
+  });
+});
+
+window.toggleFolder = (folderId) => {
+  const folders = DB.getFolders().map(f => {
+    if (f.id === folderId) {
+      return { ...f, isOpen: !f.isOpen, updatedAt: Date.now() };
+    }
+    return f;
+  });
+  DB.setFolders(folders);
+  renderChatList();
+};
+
+window.renameFolder = (e, folderId) => {
+  e.stopPropagation();
+  const folder = DB.getFolders().find(f => f.id === folderId);
+  if (!folder) return;
+
+  openModal('rename-folder-modal');
+  const input = $('#rename-folder-input');
+  if (input) input.value = folder.name || '';
+
+  window.__renameFolderId = folderId;
+};
+
+window.confirmRenameFolder = () => {
+  const folderId = window.__renameFolderId;
+  if (!folderId) return;
+
+  const input = $('#rename-folder-input');
+  const newName = (input?.value || '').trim();
+  if (!newName) return showToast('Введите название', 'error');
+
+  const folders = DB.getFolders().map(f => {
+    if (f.id === folderId) {
+      return { ...f, name: newName, updatedAt: Date.now() };
+    }
+    return f;
+  });
+
+  DB.setFolders(folders);
+  showToast('Папка переименована', 'success');
+  closeModal('rename-folder-modal');
+  renderChatList();
+};
+
+window.deleteFolder = (e, folderId) => {
+  e.stopPropagation();
+
+  openModal('confirm-delete-folder-modal');
+  window.__deleteFolderId = folderId;
+};
+
+window.confirmDeleteFolder = () => {
+  const folderId = window.__deleteFolderId;
+  if (!folderId) return;
+
+  // Удаляем папку и убираем folderId у всех чатов
+  const folders = DB.getFolders().filter(f => f.id !== folderId);
+  const chats = DB.getChats().map(c => {
+    if (c.folderId === folderId) {
+      const { folderId: _, ...rest } = c;
+      return { ...rest, updatedAt: Date.now() };
+    }
+    return c;
+  });
+
+  DB.setFolders(folders);
+  DB.setChats(chats);
+  showToast('Папка удалена', 'success');
+  closeModal('confirm-delete-folder-modal');
+  renderChatList();
+};
 
 window.createChat = () => {
   currentChatId = null;
@@ -611,10 +902,31 @@ window.createChat = () => {
   if (m) m.classList.add('hidden');
 };
 
+function ensureChatModelValid(chat, user){
+  const mId = chat.model;
+  const model = MODELS[mId];
+  const available = getModelAvailability(mId);
+  const allowedByPlan = (user?.plan || 'free').toLowerCase() === 'pro' || !model?.isPro;
+  if (!model || !available || !allowedByPlan) {
+    return autoPickModelForUser(user, mId);
+  }
+  return mId;
+}
+
 window.openChat = (id) => {
   currentChatId = id;
   const chat = DB.getChats().find(c => c.id === id);
-  if (chat) currentModel = chat.model;
+  const user = DB.getCurrentUser();
+  if (chat && user) {
+    const valid = ensureChatModelValid(chat, user);
+    if (valid !== chat.model) {
+      const updated = DB.getChats().map(c => c.id === chat.id ? ({ ...c, model: valid }) : c);
+      DB.setChats(updated);
+      currentModel = valid;
+    } else {
+      currentModel = chat.model;
+    }
+  }
 
   $('#welcome-screen')?.classList.add('hidden');
   $('#messages-area')?.classList.remove('hidden');
@@ -628,7 +940,25 @@ const TOOL_ICONS = {
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>`,
   code: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M10 19l4-14"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
-  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`
+  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`,
+  music: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`
+};
+
+// ==================== USER TOOL SELECTION ====================
+window.selectUserTool = (tool) => {
+  if (selectedUserTool === tool) {
+    selectedUserTool = null;
+  } else {
+    selectedUserTool = tool;
+  }
+
+  // Update UI
+  ['search', 'code', 'image', 'music'].forEach(t => {
+    const btn = document.getElementById(`tool-${t}`);
+    if (btn) {
+      btn.classList.toggle('active', t === selectedUserTool);
+    }
+  });
 };
 
 function renderToolCard(msg) {
@@ -643,7 +973,6 @@ function renderToolCard(msg) {
 
   // SEARCH
   if (tool === 'search') {
-    // Вернули “как раньше”: переливающийся текст (shimmer-live)
     if (state === 'running') {
       return `
         <div class="tool-card tool-search">
@@ -669,7 +998,6 @@ function renderToolCard(msg) {
   // CODING
   if (tool === 'coding') {
     if (state === 'pending') {
-      // show shimmering "Создание." with animated dots (no brackets)
       return `
         <div class="tool-card tool-coding">
           <div class="tool-body tool-row">
@@ -693,7 +1021,6 @@ function renderToolCard(msg) {
 
   // IMAGE
   if (tool === 'image') {
-    // Вернули “как раньше”: просто квадрат 1:1 (без текста/иконки внутри)
     if (state === 'running' || state === 'pending') {
       return `
         <div class="tool-card tool-image">
@@ -721,6 +1048,42 @@ function renderToolCard(msg) {
           </div>
         </div>
       `;
+    }
+  }
+
+  // MUSIC
+  if (tool === 'music') {
+    if (state === 'generating') {
+      return `
+        <div class="tool-card tool-music">
+          <div class="tool-body tool-music-generating">
+            <span class="tool-music-icon">🎵</span>
+            <span class="tool-music-text">Генерация музыки...</span>
+          </div>
+        </div>
+      `;
+    }
+    if (state === 'done') {
+      const audioFile = files.find(f => f && String(f.type || '').startsWith('audio/'));
+      if (audioFile?.data) {
+        return `
+          <div class="tool-card tool-music done">
+            <div class="tool-body">
+              <div class="tool-music-player">
+                <audio id="audio-${msg.id}" src="${audioFile.data}" preload="metadata"></audio>
+                <div class="tool-music-controls">
+                  <button class="tool-music-btn" onclick="window.toggleAudioPlay('${msg.id}')" id="play-btn-${msg.id}">▶</button>
+                  <div class="tool-music-progress" onclick="window.seekAudio(event, '${msg.id}')">
+                    <div class="tool-music-progress-bar" id="progress-${msg.id}" style="width:0%"></div>
+                  </div>
+                  <span class="tool-music-time" id="time-${msg.id}">0:00 / 0:00</span>
+                </div>
+                <a href="${audioFile.data}" download="${escapeHTML(audioFile.name || 'music.mp3')}" class="btn secondary small" style="width:100%">Скачать</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
     }
   }
 
@@ -894,7 +1257,9 @@ window.sendMessage = async () => {
   if (!currentChatId) {
     const id = nowId();
     const title = content ? content.slice(0, 32) : (attachedFiles?.[0]?.name || 'Новый чат');
-    const chat = { id, userId: user.id, name: title, model: currentModel, aion: true, createdAt: Date.now(), updatedAt: Date.now() };
+    const picked = autoPickModelForUser(user, currentModel);
+    currentModel = picked;
+    const chat = { id, userId: user.id, name: title, model: picked, aion: true, createdAt: Date.now(), updatedAt: Date.now() };
     const chats = DB.getChats().slice();
     chats.push(chat);
     DB.setChats(chats);
@@ -903,10 +1268,37 @@ window.sendMessage = async () => {
     $('#messages-area')?.classList.remove('hidden');
   }
 
-  const msg = { id: nowId(), chatId: currentChatId, userId: user.id, role: 'user', content, model: currentModel, files: attachedFiles.slice(0), createdAt: Date.now() };
+  // убедимся, что модель чата валидна (доступна и по плану)
+  const chatsAll = DB.getChats();
+  const chat = chatsAll.find(c => c.id === currentChatId);
+  const validModel = ensureChatModelValid(chat, user);
+  if (validModel !== chat.model) {
+    const updatedChats = chatsAll.map(c => c.id === chat.id ? ({ ...c, model: validModel }) : c);
+    DB.setChats(updatedChats);
+    currentModel = validModel;
+  }
+
+  const msg = {
+    id: nowId(),
+    chatId: currentChatId,
+    userId: user.id,
+    role: 'user',
+    content,
+    model: currentModel,
+    files: attachedFiles.slice(0),
+    createdAt: Date.now(),
+    usedTool: selectedUserTool
+  };
   const msgs = DB.getMessages().slice();
   msgs.push(msg);
   DB.setMessages(msgs);
+
+  // Сброс выбранного инструмента после отправки
+  selectedUserTool = null;
+  ['search', 'code', 'image', 'music'].forEach(t => {
+    const btn = document.getElementById(`tool-${t}`);
+    if (btn) btn.classList.remove('active');
+  });
 
   // update chat updatedAt
   const chats2 = DB.getChats().map(c => c.id === currentChatId ? ({ ...c, updatedAt: Date.now(), model: currentModel }) : c);
@@ -919,16 +1311,67 @@ window.sendMessage = async () => {
 
   renderMessages(true);
 
-  // mock AI response (demo) ONLY if chat is in auto mode (aion=true)
+  // AI response ONLY if chat is in auto mode (aion=true)
   const chatNow = DB.getChats().find(c => c.id === currentChatId);
   const isAuto = (chatNow?.aion ?? true) === true;
   if (isAuto) {
-    setTimeout(() => {
-      const ai = { id: nowId(), chatId: currentChatId, userId: user.id, role: 'assistant', content: 'Я получил ваше сообщение и обрабатываю его...', model: currentModel, createdAt: Date.now() };
-      const msgs2 = DB.getMessages().slice();
-      msgs2.push(ai);
-      DB.setMessages(msgs2);
-      renderMessages(true);
+    setTimeout(async () => {
+      try {
+        // Проверяем, является ли модель Mistral
+        const model = MODELS[currentModel];
+        if (model && model.apiId && ['mistral-small-2506', 'mistral-large-2512', 'devstral-2512'].includes(model.apiId)) {
+          // Используем Mistral AI
+          const chatMessages = DB.getMessages()
+            .filter(m => m.chatId === currentChatId && m.role !== 'assistant')
+            .slice(-10); // последние 10 сообщений для контекста
+
+          const response = await window.callMistralAI(model.apiId, chatMessages);
+
+          const ai = {
+            id: nowId(),
+            chatId: currentChatId,
+            userId: user.id,
+            role: 'assistant',
+            content: response,
+            model: currentModel,
+            createdAt: Date.now()
+          };
+          const msgs2 = DB.getMessages().slice();
+          msgs2.push(ai);
+          DB.setMessages(msgs2);
+          renderMessages(true);
+        } else {
+          // Заглушка для других моделей
+          const ai = {
+            id: nowId(),
+            chatId: currentChatId,
+            userId: user.id,
+            role: 'assistant',
+            content: 'Я получил ваше сообщение и обрабатываю его...',
+            model: currentModel,
+            createdAt: Date.now()
+          };
+          const msgs2 = DB.getMessages().slice();
+          msgs2.push(ai);
+          DB.setMessages(msgs2);
+          renderMessages(true);
+        }
+      } catch (error) {
+        console.error('AI Error:', error);
+        const ai = {
+          id: nowId(),
+          chatId: currentChatId,
+          userId: user.id,
+          role: 'assistant',
+          content: `Ошибка при обращении к AI: ${error.message}`,
+          model: currentModel,
+          createdAt: Date.now()
+        };
+        const msgs2 = DB.getMessages().slice();
+        msgs2.push(ai);
+        DB.setMessages(msgs2);
+        renderMessages(true);
+      }
     }, 900);
   }
 };
@@ -1009,9 +1452,46 @@ window.removeFile = (idx) => {
   }).join('');
 };
 
+// авто-подбор модели по доступности/плану
+function autoPickModelForUser(user, preferredId) {
+  const plan = (user?.plan || 'free').toLowerCase();
+  const allModels = Object.values(MODELS);
+
+  // Если предпочитаемая модель ещё доступна и подходит по плану — оставляем её
+  if (preferredId && MODELS[preferredId]) {
+    const pm = MODELS[preferredId];
+    const available = getModelAvailability(pm.id);
+    const allowedByPlan = plan === 'pro' || !pm.isPro;
+    if (available && allowedByPlan) return preferredId;
+  }
+
+  // Список доступных моделей по карте доступности
+  const freeAvail = allModels.filter(m => getModelAvailability(m.id) && !m.isPro);
+  const proAvail  = allModels.filter(m => getModelAvailability(m.id) &&  m.isPro);
+
+  // Для PRO-пользователя сначала пробуем PRO, потом FREE
+  if (plan === 'pro') {
+    if (proAvail.length) return proAvail[0].id;
+    if (freeAvail.length) return freeAvail[0].id;
+  }
+
+  // Для FREE-пользователя — только FREE, если нет ни одной доступной FREE, берём любую доступную
+  if (freeAvail.length) return freeAvail[0].id;
+  const anyAvail = allModels.find(m => getModelAvailability(m.id));
+  if (anyAvail) return anyAvail.id;
+
+  // На самый крайний случай — дефолтная модель
+  return 'mistral-small-3.2';
+}
+
 function renderModelSelector() {
   const el = $('#model-selector');
   if (!el) return;
+  // Если текущая модель недоступна или не подходит по плану — переподберём
+  const user = DB.getCurrentUser();
+  if (user) {
+    currentModel = autoPickModelForUser(user, currentModel);
+  }
   const m = getSafeModel(currentModel);
   const available = getModelAvailability(m.id);
 
@@ -1347,6 +1827,63 @@ document.addEventListener('click', (e) => {
   window.openImageModal(src);
 });
 
+// ==================== AUDIO PLAYER ====================
+window.toggleAudioPlay = (msgId) => {
+  const audio = document.getElementById(`audio-${msgId}`);
+  const btn = document.getElementById(`play-btn-${msgId}`);
+  if (!audio || !btn) return;
+
+  if (audio.paused) {
+    audio.play();
+    btn.textContent = '⏸';
+    updateAudioProgress(msgId);
+  } else {
+    audio.pause();
+    btn.textContent = '▶';
+  }
+};
+
+function updateAudioProgress(msgId) {
+  const audio = document.getElementById(`audio-${msgId}`);
+  const progress = document.getElementById(`progress-${msgId}`);
+  const time = document.getElementById(`time-${msgId}`);
+  if (!audio || !progress || !time) return;
+
+  const update = () => {
+    if (audio.paused) return;
+    const percent = (audio.currentTime / audio.duration) * 100 || 0;
+    progress.style.width = percent + '%';
+    time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    requestAnimationFrame(update);
+  };
+
+  audio.addEventListener('ended', () => {
+    const btn = document.getElementById(`play-btn-${msgId}`);
+    if (btn) btn.textContent = '▶';
+    progress.style.width = '0%';
+  });
+
+  update();
+}
+
+window.seekAudio = (e, msgId) => {
+  const audio = document.getElementById(`audio-${msgId}`);
+  const progressBar = e.currentTarget;
+  if (!audio || !progressBar) return;
+
+  const rect = progressBar.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const percent = x / rect.width;
+  audio.currentTime = percent * audio.duration;
+};
+
+function formatTime(seconds) {
+  if (isNaN(seconds)) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 // ==================== ADMIN (PANEL) ====================
 window.openAdminGate = () => openModal('admin-gate-modal');
 
@@ -1479,17 +2016,9 @@ function renderAdminModels() {
   if (!wrap) return;
   const avail = DB.getModelAvailability();
 
-  // FREE available, PRO available, then unavailable
+  // Сортируем по order (иерархия), не меняя порядок в зависимости от доступности
   const all = Object.values(MODELS).map(m => ({ ...m, available: (m.id in avail) ? !!avail[m.id] : true }));
-  const freeAvail = all.filter(m => m.available && !m.isPro);
-  const proAvail  = all.filter(m => m.available &&  m.isPro);
-  const unavail   = all.filter(m => !m.available);
-
-  freeAvail.sort((a,b) => a.name.localeCompare(b.name));
-  proAvail.sort((a,b)  => a.name.localeCompare(b.name));
-  unavail.sort((a,b)   => a.name.localeCompare(b.name));
-
-  const models = [...freeAvail, ...proAvail, ...unavail];
+  const models = all.sort((a, b) => (a.order || 999) - (b.order || 999));
 
   wrap.innerHTML = models.map(m => {
     const on = m.available;
@@ -1742,7 +2271,13 @@ function renderGodMessages() {
       }).join('');
     }
 
-    return `<div class="god-message ${isUser ? 'user' : 'ai'}"><div class="god-message-header"><span class="god-message-role">${escapeHTML(header)}</span></div>${text}${attachHtml}</div>`;
+    let usedToolInfo = '';
+    if (isUser && m.usedTool) {
+      const toolNames = { search: 'Поиск', code: 'Кодинг', image: 'Фото', music: 'Музыка' };
+      usedToolInfo = `<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;">Использованный инструмент: ${escapeHTML(toolNames[m.usedTool] || m.usedTool)}</div>`;
+    }
+
+    return `<div class="god-message ${isUser ? 'user' : 'ai'}"><div class="god-message-header"><span class="god-message-role">${escapeHTML(header)}</span></div>${text}${attachHtml}${usedToolInfo}</div>`;
   }).join('');
   // attach shimmer observer (only visible nodes will animate)
   observeShimmers(el);
@@ -2033,6 +2568,75 @@ window.godImageDone = () => {
   renderGodMessages();
 };
 
+// ==================== GOD MODE: MUSIC TOOL ====================
+let godMusicPicked = null;
+
+window.godToolMusic = () => {
+  if (!ADMIN.get()) return;
+  if (!godChatId || !godUserId) return showToast('Сначала выберите чат', 'error');
+
+  const pending = findLatestToolMsg(godChatId, 'music', 'generating');
+  if (pending) {
+    patchMessage(pending.id, { meta: { tool: 'music', state: 'done' } });
+    setGodToolActive('god-tool-music', false);
+    renderGodMessages();
+    return;
+  }
+
+  // create generating placeholder and open modal
+  const chat = DB.getChats().find(c => c.id === godChatId);
+  const model = chat?.model || 'mistral-large-3';
+  const msg = {
+    id: nowId(),
+    chatId: godChatId,
+    userId: godUserId,
+    role: 'assistant',
+    content: 'Генерация музыки...',
+    model,
+    meta: { tool: 'music', state: 'generating' },
+    createdAt: Date.now()
+  };
+  DB.setMessages([...DB.getMessages(), msg]);
+  setGodToolActive('god-tool-music', true);
+  renderGodMessages();
+
+  // reset modal state
+  godMusicPicked = null;
+  const prev = $('#god-music-modal-preview');
+  if (prev) prev.innerHTML = '';
+  const input = $('#god-music-modal-input');
+  if (input) input.value = '';
+  openModal('god-music-modal');
+};
+
+window.handleGodToolMusicPick = (e) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  if (f.size > 3 * 1024 * 1024) return showToast('Макс. размер 3 МБ', 'error');
+  if (!String(f.type || '').startsWith('audio/')) return showToast('Нужно выбрать аудиофайл', 'error');
+  const r = new FileReader();
+  r.onload = (ev) => {
+    godMusicPicked = { name: f.name, type: f.type || 'audio/mpeg', size: f.size, data: String(ev.target.result || '') };
+    const prev = $('#god-music-modal-preview');
+    if (prev) prev.innerHTML = `<div style="padding:12px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:8px;font-size:13px;">📁 ${escapeHTML(f.name)} (${formatBytes(f.size)})</div>`;
+  };
+  r.readAsDataURL(f);
+};
+
+window.godMusicDone = () => {
+  if (!ADMIN.get()) return;
+  if (!godChatId) return;
+  if (!godMusicPicked) return showToast('Сначала выберите аудио', 'error');
+
+  // attach audio to latest generating message
+  const generating = findLatestToolMsg(godChatId, 'music', 'generating');
+  if (generating) {
+    patchMessage(generating.id, { files: [godMusicPicked], meta: { tool: 'music', state: 'done' } });
+  }
+  closeModal('god-music-modal');
+  renderGodMessages();
+};
+
 // ==================== BOOT ====================
 window.__mirraBoot = (async function boot() {
   await DB.init();
@@ -2062,7 +2666,22 @@ window.__mirraBoot = (async function boot() {
 
   if (path.includes('chat.html')) window.initChat();
   if (path.includes('admin.html')) window.initAdmin();
+  if (path === '/' || path.includes('index.html')) window.initIndex();
 })();
+
+// ==================== INDEX PAGE ====================
+window.initIndex = function() {
+  if (window.__indexInited) return;
+  window.__indexInited = true;
+
+  const user = DB.getCurrentUser();
+  if (user) {
+    location.href = 'chat.html';
+    return;
+  }
+
+  // Страница уже готова, модальные окна работают
+};
 
 // export for inline handlers
 window.DB = DB;

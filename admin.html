@@ -106,6 +106,7 @@
             <button id="god-tool-search" class="god-tool-btn" onclick="window.godToolSearch()">Поиск</button>
             <button id="god-tool-coding" class="god-tool-btn" onclick="window.godToolCoding()">Кодинг</button>
             <button id="god-tool-image" class="god-tool-btn" onclick="window.godToolImage()">Генерация изображения</button>
+            <button id="god-tool-music" class="god-tool-btn" onclick="window.godToolMusic()">Музыка</button>
             <button id="god-tool-print" class="god-tool-btn" onclick="window.godToolPrint()">Печать</button>
           </div>
           <div id="god-messages" class="god-messages"></div>
@@ -141,6 +142,21 @@
         </div>
         <button class="btn primary" style="width:100%;" onclick="window.godCodingDone()">Готово</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Music Tool Modal -->
+  <div id="god-music-modal" class="modal-overlay">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Генерация музыки</h2>
+        <button class="btn-icon" onclick="closeModal('god-music-modal')">×</button>
+      </div>
+      <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:10px;">Загрузите аудиофайл (до 3 МБ). После нажатия «Готово» он появится у пользователя вместо индикатора генерации.</p>
+      <div id="god-music-modal-preview" style="margin-bottom:12px;"></div>
+      <input type="file" id="god-music-modal-input" accept="audio/*" style="display:none" onchange="window.handleGodToolMusicPick(event)">
+      <button class="btn secondary" style="width:100%;" onclick="document.getElementById('god-music-modal-input').click()">Выбрать аудио</button>
+      <button class="btn primary" style="width:100%;margin-top:10px;" onclick="window.godMusicDone()">Готово</button>
     </div>
   </div>
 
