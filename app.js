@@ -65,6 +65,33 @@ const escapeHTML = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({
   "'": '&#39;'
 }[c]));
 
+// Глобальный режим сортировки чатов
+let chatSortMode = 'date'; // date | alpha | messages
+window.selectChatSort = (mode) => {
+  chatSortMode = mode;
+  renderChatList();
+  const btn = $('#sort-selected-label');
+  if (btn) {
+    btn.textContent = mode === 'date' ? 'Сначала новые' : (mode === 'alpha' ? 'По алфавиту' : 'По сообщениям');
+  }
+};
+
+// Выбранный инструмент пользователя (только 1 активен)
+let selectedUserTool = null; // 'search' | 'code' | 'image' | 'music' | null
+window.selectUserTool = (tool) => {
+  if (selectedUserTool === tool) {
+    // Отключить
+    selectedUserTool = null;
+    $$('.tool-btn').forEach(b => b.classList.remove('active'));
+  } else {
+    // Выбрать
+    selectedUserTool = tool;
+    $$('.tool-btn').forEach(b => b.classList.remove('active'));
+    const btn = $(`#tool-${tool}`);
+    if (btn) btn.classList.add('active');
+  }
+};
+
 function showToast(msg, type = 'info') {
   const t = $('#toast');
   if (!t) return;
@@ -72,6 +99,36 @@ function showToast(msg, type = 'info') {
   t.textContent = msg;
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// Универсальная confirm-модалка (замена alert/confirm)
+let confirmResolve = null;
+window.showConfirm = (title, message) => {
+  return new Promise((resolve) => {
+    confirmResolve = resolve;
+    const modal = $('#confirm-modal');
+    const titleEl = $('#confirm-title');
+    const msgEl = $('#confirm-message');
+    const okBtn = $('#confirm-ok-btn');
+    if (!modal || !titleEl || !msgEl || !okBtn) {
+      resolve(false);
+      return;
+    }
+    titleEl.textContent = title || 'Подтверждение';
+    msgEl.textContent = message || '';
+    okBtn.onclick = () => {
+      window.closeConfirm(true);
+    };
+    modal.classList.add('active');
+  });
+};
+window.closeConfirm = (result = false) => {
+  const modal = $('#confirm-modal');
+  if (modal) modal.classList.remove('active');
+  if (confirmResolve) {
+    confirmResolve(!!result);
+    confirmResolve = null;
+  }
+};
 
 function nowId() {
   return Date.now().toString() + Math.floor(Math.random() * 1000).toString();
@@ -225,7 +282,8 @@ const DB = {
 
   queueCommit() {
     clearTimeout(DB._commitTimer);
-    DB._commitTimer = setTimeout(() => DB.commit(), 80);
+    // Моментальная синхронизация (30мс дебаунс для оптимизации серии вызовов)
+    DB._commitTimer = setTimeout(() => DB.commit(), 30);
   },
 
   async commit() {
@@ -322,24 +380,9 @@ const DB = {
 };
 
 // ==================== MODALS ====================
-// IMPORTANT: this file is a JS module. If we only set window.openModal, the identifier
-// "openModal" is NOT available in module scope and any internal calls like openModal(...)
-// will throw ReferenceError. So we define real functions and also export them to window.
-const openModal = async (id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.add('active');
-  if (id === 'auth-modal') {
-    await window.toggleAuthMode('login');
-  }
-};
-const closeModal = (id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.remove('active');
-};
-window.openModal = openModal;
-window.closeModal = closeModal;
+// Modal functions are exported early in EARLY EXPORTS section to be available for inline handlers
+const openModal = window.openModal;
+const closeModal = window.closeModal;
 
 // ==================== AUTH UI ====================
 window.toggleAuthMode = async (mode) => {
@@ -576,31 +619,92 @@ function renderProfile() {
   });
 }
 
+function sortChatsForUser(chats) {
+  // сортировка по глобальному режиму
+  return chats.slice().sort((a, b) => {
+    if (chatSortMode === 'alpha') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    if (chatSortMode === 'messages') {
+      const ma = DB.getMessages().filter(m => m.chatId === a.id).length;
+      const mb = DB.getMessages().filter(m => m.chatId === b.id).length;
+      return mb - ma;
+    }
+    // date (по умолчанию): новые сверху
+    return (b.updatedAt || 0) - (a.updatedAt || 0);
+  });
+}
+
 function renderChatList() {
   const user = DB.getCurrentUser();
   const listEl = $('#chat-list');
   if (!user || !listEl) return;
 
-  const chats = DB.getChats().filter(c => c.userId === user.id).slice();
-  chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const rawChats = DB.getChats().filter(c => c.userId === user.id);
 
-  if (!chats.length) {
+  // Разбиваем на папки и чаты вне папок
+  const folders = DB.getFolders().filter(f => f.userId === user.id);
+  const folderMap = new Map();
+  folders.forEach(f => { folderMap.set(f.id, f); });
+
+  // чаты, не находящиеся в папках
+  const chatsOutside = rawChats.filter(c => !c.folderId);
+
+  const sortedOutside = sortChatsForUser(chatsOutside);
+  const sortedFolders = folders.slice().sort((a,b) => (b.updatedAt||0)-(a.updatedAt||0));
+
+  if (!rawChats.length) {
     listEl.innerHTML = '<div class="empty-state">Нет диалогов</div>';
     return;
   }
 
-  listEl.innerHTML = chats.map(chat => {
+  const renderChatItem = (chat) => {
     const model = getSafeModel(chat.model);
+    const msgsCount = DB.getMessages().filter(m => m.chatId === chat.id).length;
     return `
-      <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="window.openChat('${chat.id}')">
+      <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" 
+           draggable="true"
+           ondragstart="window.onChatDragStart(event, '${chat.id}')"
+           ondragover="window.onChatDragOver(event)"
+           ondragleave="window.onChatDragLeave(event)"
+           ondrop="window.onChatDrop(event, '${chat.id}')"
+           onclick="window.openChat('${chat.id}')">
         <div class="chat-item-icon">${ICONS[model.icon]}</div>
         <div class="chat-item-info">
           <div class="chat-item-name">${escapeHTML(chat.name || 'Диалог')}</div>
-          <div class="chat-item-model">${escapeHTML(model.name)}</div>
+          <div class="chat-item-model">${escapeHTML(model.name)} · ${msgsCount} сообщений</div>
         </div>
       </div>
     `;
-  }).join('');
+  };
+
+  const renderFolder = (folder) => {
+    const folderChats = rawChats.filter(c => c.folderId === folder.id);
+    const sortedChats = sortChatsForUser(folderChats);
+    return `
+      <div class="folder-item" draggable="true"
+           ondragstart="window.onFolderDragStart(event, '${folder.id}')"
+           ondragover="window.onChatDragOver(event)"
+           ondragleave="window.onChatDragLeave(event)"
+           ondrop="window.onFolderDrop(event, '${folder.id}')">
+        <div class="folder-header" onclick="window.toggleFolder('${folder.id}')">
+          <div class="folder-icon">📁</div>
+          <div class="folder-name">${escapeHTML(folder.name || 'Папка')}</div>
+          <div class="folder-count">${folderChats.length}</div>
+          <button class="folder-edit" onclick="window.renameFolder(event, '${folder.id}')">✎</button>
+          <button class="folder-edit" onclick="window.deleteFolder(event, '${folder.id}')">🗑</button>
+        </div>
+        <div class="folder-chats" id="folder-${folder.id}-chats">
+          ${sortedChats.map(renderChatItem).join('') || '<div class="empty-state">Нет чатов</div>'}
+        </div>
+      </div>
+    `;
+  };
+
+  listEl.innerHTML = `
+    ${sortedOutside.map(renderChatItem).join('')}
+    ${sortedFolders.map(renderFolder).join('')}
+  `;
 }
 
 window.createChat = () => {
@@ -611,10 +715,31 @@ window.createChat = () => {
   if (m) m.classList.add('hidden');
 };
 
+function ensureChatModelValid(chat, user){
+  const mId = chat.model;
+  const model = MODELS[mId];
+  const available = getModelAvailability(mId);
+  const allowedByPlan = (user?.plan || 'free').toLowerCase() === 'pro' || !model?.isPro;
+  if (!model || !available || !allowedByPlan) {
+    return autoPickModelForUser(user, mId);
+  }
+  return mId;
+}
+
 window.openChat = (id) => {
   currentChatId = id;
   const chat = DB.getChats().find(c => c.id === id);
-  if (chat) currentModel = chat.model;
+  const user = DB.getCurrentUser();
+  if (chat && user) {
+    const valid = ensureChatModelValid(chat, user);
+    if (valid !== chat.model) {
+      const updated = DB.getChats().map(c => c.id === chat.id ? ({ ...c, model: valid }) : c);
+      DB.setChats(updated);
+      currentModel = valid;
+    } else {
+      currentModel = chat.model;
+    }
+  }
 
   $('#welcome-screen')?.classList.add('hidden');
   $('#messages-area')?.classList.remove('hidden');
@@ -894,7 +1019,9 @@ window.sendMessage = async () => {
   if (!currentChatId) {
     const id = nowId();
     const title = content ? content.slice(0, 32) : (attachedFiles?.[0]?.name || 'Новый чат');
-    const chat = { id, userId: user.id, name: title, model: currentModel, aion: true, createdAt: Date.now(), updatedAt: Date.now() };
+    const picked = autoPickModelForUser(user, currentModel);
+    currentModel = picked;
+    const chat = { id, userId: user.id, name: title, model: picked, aion: true, createdAt: Date.now(), updatedAt: Date.now() };
     const chats = DB.getChats().slice();
     chats.push(chat);
     DB.setChats(chats);
@@ -903,7 +1030,27 @@ window.sendMessage = async () => {
     $('#messages-area')?.classList.remove('hidden');
   }
 
-  const msg = { id: nowId(), chatId: currentChatId, userId: user.id, role: 'user', content, model: currentModel, files: attachedFiles.slice(0), createdAt: Date.now() };
+  // убедимся, что модель чата валидна (доступна и по плану)
+  const chatsAll = DB.getChats();
+  const chat = chatsAll.find(c => c.id === currentChatId);
+  const validModel = ensureChatModelValid(chat, user);
+  if (validModel !== chat.model) {
+    const updatedChats = chatsAll.map(c => c.id === chat.id ? ({ ...c, model: validModel }) : c);
+    DB.setChats(updatedChats);
+    currentModel = validModel;
+  }
+
+  const msg = {
+    id: nowId(),
+    chatId: currentChatId,
+    userId: user.id,
+    role: 'user',
+    content,
+    model: currentModel,
+    files: attachedFiles.slice(0),
+    tool: selectedUserTool, // Сохраняем выбранный инструмент
+    createdAt: Date.now()
+  };
   const msgs = DB.getMessages().slice();
   msgs.push(msg);
   DB.setMessages(msgs);
@@ -916,6 +1063,9 @@ window.sendMessage = async () => {
   attachedFiles = [];
   const fp = $('#file-preview');
   if (fp) fp.innerHTML = '';
+  // Сбрасываем выбранный инструмент
+  selectedUserTool = null;
+  $$('.tool-btn').forEach(b => b.classList.remove('active'));
 
   renderMessages(true);
 
@@ -1009,9 +1159,46 @@ window.removeFile = (idx) => {
   }).join('');
 };
 
+// авто-подбор модели по доступности/плану
+function autoPickModelForUser(user, preferredId) {
+  const plan = (user?.plan || 'free').toLowerCase();
+  const allModels = Object.values(MODELS);
+
+  // Если предпочитаемая модель ещё доступна и подходит по плану — оставляем её
+  if (preferredId && MODELS[preferredId]) {
+    const pm = MODELS[preferredId];
+    const available = getModelAvailability(pm.id);
+    const allowedByPlan = plan === 'pro' || !pm.isPro;
+    if (available && allowedByPlan) return preferredId;
+  }
+
+  // Список доступных моделей по карте доступности
+  const freeAvail = allModels.filter(m => getModelAvailability(m.id) && !m.isPro);
+  const proAvail  = allModels.filter(m => getModelAvailability(m.id) &&  m.isPro);
+
+  // Для PRO-пользователя сначала пробуем PRO, потом FREE
+  if (plan === 'pro') {
+    if (proAvail.length) return proAvail[0].id;
+    if (freeAvail.length) return freeAvail[0].id;
+  }
+
+  // Для FREE-пользователя — только FREE, если нет ни одной доступной FREE, берём любую доступную
+  if (freeAvail.length) return freeAvail[0].id;
+  const anyAvail = allModels.find(m => getModelAvailability(m.id));
+  if (anyAvail) return anyAvail.id;
+
+  // На самый крайний случай — дефолтная модель
+  return 'mistral-small-3.2';
+}
+
 function renderModelSelector() {
   const el = $('#model-selector');
   if (!el) return;
+  // Если текущая модель недоступна или не подходит по плану — переподберём
+  const user = DB.getCurrentUser();
+  if (user) {
+    currentModel = autoPickModelForUser(user, currentModel);
+  }
   const m = getSafeModel(currentModel);
   const available = getModelAvailability(m.id);
 
@@ -1874,14 +2061,16 @@ function syncGodToolsUI() {
     setGodToolActive('god-tool-search', false);
     setGodToolActive('god-tool-coding', false);
     setGodToolActive('god-tool-image', false);
+    setGodToolActive('god-tool-music', false);
     setGodToolActive('god-tool-print', false);
     return;
   }
 
-  // Поиск / Кодинг / Генерация изображения берём из сообщений-инструментов
+  // Поиск / Кодинг / Генерация изображения / Музыка берём из сообщений-инструментов
   setGodToolActive('god-tool-search', !!findLatestToolMsg(godChatId, 'search', 'running'));
   setGodToolActive('god-tool-coding', !!findLatestToolMsg(godChatId, 'coding', 'pending'));
   setGodToolActive('god-tool-image', !!findLatestToolMsg(godChatId, 'image', ['running','pending']));
+  setGodToolActive('god-tool-music', !!findLatestToolMsg(godChatId, 'music', ['running','pending']));
 
   // Печать (thinking) берём из самого чата
   const chat = DB.getChats().find(c => c.id === godChatId);
@@ -2031,6 +2220,94 @@ window.godImageDone = () => {
   }
   closeModal('god-image-modal');
   renderGodMessages();
+};
+
+// Music tool: 1) клик -> "Генерация музыки..." (running) + открывается модалка для загрузки
+// "Готово" прикрепляет аудиофайл (pending)
+// 2) второй клик -> state=done, текст "Музыка готова", аудио отображается
+let godMusicPicked = null;
+
+window.godToolMusic = () => {
+  if (!ADMIN.get()) return;
+  if (!godChatId || !godUserId) return showToast('Сначала выберите чат', 'error');
+
+  const pending = findLatestToolMsg(godChatId, 'music', ['running','pending']);
+  if (pending && pending.meta?.state === 'pending') {
+    patchMessage(pending.id, { content: 'Музыка готова', meta: { tool: 'music', state: 'done' } });
+    setGodToolActive('god-tool-music', false);
+    renderGodMessages();
+    return;
+  }
+
+  // create running placeholder and open modal
+  const chat = DB.getChats().find(c => c.id === godChatId);
+  const model = chat?.model || 'mistral-large-3';
+  const msg = {
+    id: nowId(),
+    chatId: godChatId,
+    userId: godUserId,
+    role: 'assistant',
+    content: 'Генерация музыки...',
+    model,
+    meta: { tool: 'music', state: 'running' },
+    createdAt: Date.now()
+  };
+  DB.setMessages([...DB.getMessages(), msg]);
+  setGodToolActive('god-tool-music', true);
+  renderGodMessages();
+
+  // reset modal state
+  godMusicPicked = null;
+  const prev = $('#god-music-modal-preview');
+  if (prev) prev.innerHTML = '';
+  const input = $('#god-music-modal-input');
+  if (input) input.value = '';
+  openModal('god-music-modal');
+};
+
+window.handleGodToolMusicPick = (e) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) return showToast('Макс. размер 10 МБ', 'error');
+  const type = String(f.type || '');
+  if (!type.startsWith('audio/')) return showToast('Нужно выбрать аудиофайл', 'error');
+  const r = new FileReader();
+  r.onload = (ev) => {
+    godMusicPicked = { name: f.name, type: f.type || 'audio/mpeg', size: f.size, data: String(ev.target.result || '') };
+    const prev = $('#god-music-modal-preview');
+    if (prev) prev.innerHTML = `<audio controls class="tool-audio" src="${godMusicPicked.data}"></audio>`;
+  };
+  r.readAsDataURL(f);
+};
+
+window.godMusicDone = () => {
+  if (!ADMIN.get()) return;
+  if (!godChatId) return;
+  if (!godMusicPicked) return showToast('Сначала выберите аудио', 'error');
+
+  // attach audio to latest running message
+  const running = findLatestToolMsg(godChatId, 'music', 'running');
+  if (running) {
+    patchMessage(running.id, { files: [godMusicPicked], meta: { tool: 'music', state: 'pending' } });
+  }
+  closeModal('god-music-modal');
+  renderGodMessages();
+};
+
+// ==================== EARLY EXPORTS (для inline-обработчиков) ====================
+// Экспортируем функции сразу, чтобы они были доступны из inline onclick в HTML
+window.openModal = async (id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('active');
+  if (id === 'auth-modal') {
+    await window.toggleAuthMode?.('login');
+  }
+};
+window.closeModal = (id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('active');
 };
 
 // ==================== BOOT ====================

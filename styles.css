@@ -274,13 +274,39 @@ select.input-field {
 }
 
 .landing-hero {
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 24px 80px;
+  padding: 140px 24px 96px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Убрали фиолетовые пульсации, оставили чистый чёрный фон */
+.landing-hero::before,
+.landing-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: none;
+  animation: none;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes purplePulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.15); opacity: 0.8; }
+}
+
+/* ограничиваем ширину контента, чтобы текст не "растекался" */
+.landing-hero > * {
+  max-width: 960px;
 }
 
 .hero-title {
@@ -1659,6 +1685,57 @@ img[alt="Grok"], img[alt="grok--v1"] {
   50%  { stroke: rgba(255,255,255,0.95); }
   100% { stroke: rgba(255,255,255,0.35); }
 }
+
+/* ===== USER TOOLBAR (icons near input) ===== */
+.user-tools-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+.tool-btn{
+  width:34px; height:34px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.2s;
+}
+.tool-btn svg{ width:18px; height:18px; display:block; }
+.tool-btn:hover{ border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); }
+.tool-btn.active{ border-color:rgba(142,67,255,0.5); box-shadow:0 0 0 1px rgba(142,67,255,0.3); background:rgba(142,67,255,0.15); }
+
+/* God Mode music tool */
+.tool-ico.music{ width:22px; height:22px; }
+.tool-ico.music svg{ animation: toolSpin 1.8s linear infinite; }
+
+/* Audio player style in tool-card */
+.tool-audio{
+  width: 100%;
+  margin-top:8px;
+}
+
+/* Sort pills toolbar */
+.sort-toolbar{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin:8px 0;
+}
+.sort-pill{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.04);
+  color:var(--text-secondary);
+  cursor:pointer;
+  transition:.2s;
+}
+.sort-pill.active{ color:#fff; border-color:rgba(142,67,255,0.4); background:rgba(142,67,255,0.12); }
 .preview-item {
   position: relative;
   display: inline-block;
