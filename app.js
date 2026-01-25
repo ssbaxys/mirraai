@@ -1304,6 +1304,16 @@ function renderSingleTool(toolMeta, msg, toolIdx) {
         </div>
       `;
     }
+    if (state === 'error') {
+      return `
+        <div class="tool-card tool-search" style="border-color:#ff4757;">
+          <div class="tool-body tool-row" style="color:#ff4757;">
+            <span class="tool-ico">${TOOL_ICONS.search}</span>
+            <span class="tool-text">Ошибка поиска</span>
+          </div>
+        </div>
+      `;
+    }
   }
 
   // ============ IMAGE ============
@@ -1333,6 +1343,16 @@ function renderSingleTool(toolMeta, msg, toolIdx) {
         <div class="tool-card tool-image done">
           <div class="tool-body">
             <div class="gen-image-placeholder" aria-hidden="true"></div>
+          </div>
+        </div>
+      `;
+    }
+    if (state === 'error') {
+      return `
+        <div class="tool-card tool-image" style="border-color:#ff4757;">
+          <div class="tool-body tool-col tool-col-center" style="color:#ff4757;">
+             <span class="tool-ico">${TOOL_ICONS.image}</span>
+             <span>Ошибка генерации</span>
           </div>
         </div>
       `;
@@ -1371,6 +1391,15 @@ function renderSingleTool(toolMeta, msg, toolIdx) {
            <div class="tool-body tool-row">
              <span class="tool-ico">${TOOL_ICONS.music}</span>
              <span><strong>Music generated</strong> (No audio file)</span>
+           </div>
+        </div>`;
+    }
+    if (state === 'error') {
+      return `
+        <div class="tool-card tool-music" style="border-color:#ff4757;">
+           <div class="tool-body tool-row" style="color:#ff4757;">
+             <span class="tool-ico">${TOOL_ICONS.music}</span>
+             <span>Ошибка генерации музыки</span>
            </div>
         </div>`;
     }
@@ -2402,7 +2431,15 @@ window.renderProfile = () => {
 
 window.openAdminGate = () => {
   window.openModal('admin-gate-modal');
-  setTimeout(() => document.getElementById('admin-gate-password')?.focus(), 100);
+  setTimeout(() => {
+    const el = document.getElementById('admin-gate-password');
+    if (el) {
+      el.focus();
+      el.onkeydown = (e) => {
+        if (e.key === 'Enter') window.checkAdminGate();
+      };
+    }
+  }, 100);
 };
 
 window.checkAdminGate = () => {
