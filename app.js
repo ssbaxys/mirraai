@@ -367,7 +367,15 @@ const DB = {
     await set(ref(db, `${REMOTE_PATH}/modelAvailability`), list);
   },
 
-  getCurrentUser: () => JSON.parse(localStorage.getItem('mirra_current_user') || 'null'),
+  getCurrentUser: () => {
+    try {
+      return JSON.parse(localStorage.getItem('mirra_current_user') || 'null');
+    } catch (e) {
+      console.warn('Corrupted local user data, clearing...');
+      localStorage.removeItem('mirra_current_user');
+      return null;
+    }
+  },
   setCurrentUser: (u) => localStorage.setItem('mirra_current_user', JSON.stringify(u)),
   clearCurrentUser: () => localStorage.removeItem('mirra_current_user'),
 
@@ -377,6 +385,8 @@ const DB = {
 
 
   async init() {
+    // ...
+
     // Global listener for User Sync & Security & UI
     DB.subscribe((state) => {
       let local = DB.getCurrentUser();
@@ -2427,18 +2437,20 @@ window.openAdminGate = () => {
   }, 100);
 };
 
-window.checkAdminGate = () => {
-  const pwd = document.getElementById('admin-gate-password')?.value;
+window.checkAdminGate = async () => {
+  const input = document.getElementById('admin-gate-password');
+  const pwd = (input?.value || '').trim();
   if (!pwd) return;
 
   const cfg = DB.getAdminConfig();
-  const real = cfg ? cfg.password : '4321'; // default
+  // Safe fallback if cfg exists but password is empty/undefined
+  const real = (cfg && cfg.password) ? cfg.password : '4321';
 
   if (pwd === real) {
     const local = DB.getCurrentUser();
     if (local && !local.isAdmin) {
-      // Upgrade user
-      DB.saveUser({ ...local, isAdmin: true });
+      // Upgrade user and WAIT for it to finish
+      await DB.saveUser({ ...local, isAdmin: true });
     }
     ADMIN.set(true);
     showToast('Админ-доступ включён', 'success');

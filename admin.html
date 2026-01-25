@@ -256,6 +256,41 @@
     </div>
   </div>
 
+  <!-- Edit User Modal -->
+  <div id="edit-user-modal" class="modal-overlay">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Изменить данные</h2>
+        <button class="btn-icon" onclick="closeModal('edit-user-modal')">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <input type="hidden" id="edit-user-target-id"> <!-- Original ID to track changes -->
+
+        <div class="input-group">
+          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">User ID (Осторожно!)</label>
+          <input id="edit-user-id" class="input-field" type="text" placeholder="ID пользователя">
+        </div>
+
+        <div class="input-group">
+          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Системный Никнейм (Логин)</label>
+          <input id="edit-user-nickname" class="input-field" type="text" placeholder="Уникальный ник">
+        </div>
+
+        <div class="input-group">
+          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Визуальное имя</label>
+          <input id="edit-user-visible-name" class="input-field" type="text" placeholder="Имя в чате">
+        </div>
+
+        <div class="input-group">
+          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Пароль</label>
+          <input id="edit-user-password" class="input-field" type="text" placeholder="Новый пароль">
+        </div>
+
+        <button class="btn primary full" onclick="window.saveUserData()">Сохранить изменения</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Admin Settings Modal -->
   <div id="admin-settings-modal" class="modal-overlay">
     <div class="modal" style="max-width:400px;">
