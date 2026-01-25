@@ -1785,10 +1785,10 @@ function renderMessages(force = false) {
       <div id="msg-${m.id}" class="message ${isUser ? 'user' : 'assistant'}" data-sig='${safeSig}'>
         <div class="message-avatar ${isUser ? 'user' : ''}">${avatar}</div>
         <div class="message-body" style="position:relative;">
-          ${editBtnHtml}
           <div class="message-header">${headerHtml}</div>
           ${textHtml}
           <div class="message-image-container">
+            ${editBtnHtml}
             ${attachHtml}
           </div>
           ${toolsMetaHtml}
@@ -2950,3 +2950,14 @@ window.playNotificationSound = function () { // Export globally
   }
 };
 window.deleteChatUser = deleteChatUser;
+
+// Global Exports for Admin & Utils
+window.DB = DB;
+window.MODELS = MODELS;
+window.ICONS = ICONS;
+window.TOOL_ICONS = TOOL_ICONS;
+window.getSafeModel = getSafeModel;
+window.formatBytes = formatBytes;
+window.isImageFile = isImageFile;
+window.renderFileBlock = renderFileBlock;
+window.parseMarkdown = parseMarkdown;

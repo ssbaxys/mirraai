@@ -3713,3 +3713,40 @@ input:checked+.toggle-slider {
 input:checked+.toggle-slider:before {
   transform: translateX(20px);
 }
+
+/* Tool Usage Badges (Generation/Editing) */
+.tool-usage-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tool-usage-badge.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tool-usage-badge.clickable:hover {
+  background: rgba(142, 67, 255, 0.2);
+  color: #c6a6ff;
+  border-color: rgba(142, 67, 255, 0.3);
+}
+
+/* Edit Image Button Active State */
+.edit-image-btn.active-blue {
+  background: var(--primary) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Ensure message body has relative positioning for button if we kept it outside, 
+   but we are moving it inside. Still good to have. */
+.message-body {
+  position: relative;
+}
