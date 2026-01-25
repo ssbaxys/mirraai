@@ -132,6 +132,11 @@ function getSafeModel(id) {
   return MODELS[id] || MODELS['mistral-small-3.2'];
 }
 
+window.getModelAvailability = function (id) {
+  const map = DB.getModelAvailability() || {};
+  return (id in map) ? !!map[id] : true;
+};
+
 function formatBytes(bytes) {
   const b = Number(bytes || 0);
   if (!b) return '';
@@ -820,8 +825,7 @@ window.initChat = function () {
         const user = DB.getCurrentUser();
         const m = MODELS[currentModel];
         if (user && m) {
-          const availMap = DB.getModelAvailability();
-          const isAvail = (currentModel in availMap) ? availMap[currentModel] : true;
+          const isAvail = getModelAvailability(currentModel);
           const isAllowed = (user.plan === 'pro') || !m.isPro;
 
           if (!isAvail || !isAllowed) {
