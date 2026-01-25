@@ -642,12 +642,20 @@ img[alt="grok--v1"] {
 }
 
 .feature-card {
-  background: radial-gradient(circle at top left, rgba(142, 67, 255, 0.18), rgba(10, 10, 12, 0.9));
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 22px 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 30px 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  backdrop-filter: blur(4px);
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .feature-card h3 {
@@ -662,80 +670,89 @@ img[alt="grok--v1"] {
   line-height: 1.6;
 }
 
-.feature-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(142, 67, 255, 0.4);
-  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.7);
-}
-
-/* How it works section */
+/* How it works section - modern cards */
 .how-section {
-  padding: 20px 24px 80px;
+  padding: 80px 24px;
+  background: rgba(255, 255, 255, 0.01);
 }
 
-.how-grid {
+.how-container {
   max-width: 1100px;
   margin: 0 auto;
+}
+
+.how-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.how-steps-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
-  gap: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
 }
 
-@media (max-width: 900px) {
-  .how-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.how-list {
-  margin-top: 14px;
-  list-style: none;
-  counter-reset: howstep;
-}
-
-.how-list li {
+.how-step-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px;
   position: relative;
-  padding-left: 36px;
-  margin-bottom: 14px;
+  transition: 0.3s;
+}
+
+.how-step-card:hover {
+  border-color: var(--primary);
+  background: rgba(142, 67, 255, 0.03);
+  transform: scale(1.02);
+}
+
+.how-step-number {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(142, 67, 255, 0.4);
+}
+
+.how-step-card h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.how-step-card p {
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
 }
 
-.how-list li::before {
-  counter-increment: howstep;
-  content: counter(howstep);
-  position: absolute;
-  left: 0;
-  top: 2px;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
+.how-footer-card {
+  margin-top: 40px;
+  background: linear-gradient(135deg, rgba(142, 67, 255, 0.1), rgba(0, 0, 0, 0));
+  border: 1px solid rgba(142, 67, 255, 0.2);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
 }
 
-.how-card {
-  background: var(--surface);
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  padding: 20px 22px;
-}
-
-.how-card h3 {
+.how-footer-card h3 {
   font-family: 'Unbounded', sans-serif;
-  font-size: 17px;
-  margin-bottom: 10px;
+  font-size: 22px;
+  margin-bottom: 16px;
 }
 
-.how-card p {
-  font-size: 14px;
+.how-footer-card p {
+  max-width: 600px;
+  margin: 0 auto;
   color: var(--text-secondary);
-  line-height: 1.7;
 }
 
 /* FAQ section */
@@ -1703,6 +1720,29 @@ img[alt="grok--v1"] {
   line-height: 1.6;
   max-width: 100%;
   overflow-wrap: anywhere;
+  position: relative;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--primary);
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+
+  from,
+  to {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 .message.user .message-text {
@@ -3399,12 +3439,25 @@ img[alt="grok--v1"] {
   color: #8e43ff !important;
   border-color: rgba(142, 67, 255, 0.3) !important;
 }
+
 @keyframes starsMove {
-  from { background-position: 0 0; }
-  to { background-position: 0 700px; }
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 700px;
+  }
 }
 
 @keyframes nebulaPulse {
-  0% { transform: scale(1) translate(0, 0); opacity: 0.8; }
-  100% { transform: scale(1.1) translate(2%, 2%); opacity: 1; }
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1.1) translate(2%, 2%);
+    opacity: 1;
+  }
 }

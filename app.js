@@ -1556,6 +1556,41 @@ function observeShimmers(rootEl) {
   });
 }
 
+const animatedMessages = new Set();
+
+function runTypewriter(el, content, finalHtml) {
+  if (!el || !content) {
+    if (el) el.innerHTML = finalHtml;
+    return;
+  }
+
+  el.innerHTML = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'typewriter-cursor';
+
+  let i = 0;
+  const speed = 15; // ms per char
+
+  function type() {
+    if (i < content.length) {
+      // Create a temporary span for the next char to handle potential issues with innerHTML
+      const char = content[i];
+      el.textContent = content.substring(0, i + 1);
+      el.appendChild(cursor);
+      i++;
+      setTimeout(type, speed);
+    } else {
+      // Done typing, set final formatted HTML
+      el.innerHTML = finalHtml;
+      // Scroll to bottom if container exists
+      const container = document.getElementById('messages-container');
+      if (container) container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  type();
+}
+
 function renderMessages(force = false) {
   const container = $('#messages-container');
   const user = DB.getCurrentUser();
@@ -1650,6 +1685,15 @@ function renderMessages(force = false) {
       existingEl.outerHTML = msgHtml;
     } else {
       container.insertAdjacentHTML('beforeend', msgHtml);
+      // Trigger typewriter for new assistant messages
+      if (!isUser && !animatedMessages.has(m.id)) {
+        animatedMessages.add(m.id);
+        const newEl = document.getElementById(`msg-${m.id}`);
+        const textEl = newEl?.querySelector('.message-text');
+        if (textEl && !toolHtml) { // Only animate text, not tools
+          runTypewriter(textEl, content, parseMarkdown(content));
+        }
+      }
     }
   });
 
