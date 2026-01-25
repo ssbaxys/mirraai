@@ -643,7 +643,14 @@ function renderGodMessages() {
                     : window.renderFileBlock(f);
             }).join('');
         }
-        return `<div class="god-message ${isUser ? 'user' : 'ai'}"><div class="god-message-header"><span class="god-message-role">${header}</span></div>${text}${toolLabel}${attachHtml}</div>`;
+        return `
+            <div class="god-message ${isUser ? 'user' : 'ai'}">
+                <div class="god-message-header">
+                    <span class="god-message-role">${header}</span>
+                    <button class="god-msg-delete" onclick="window.deleteGodMessage('${m.id}')">×</button>
+                </div>
+                ${text}${toolLabel}${attachHtml}
+            </div>`;
     }).join('');
 
     if (window.observeShimmers) window.observeShimmers(el);
@@ -924,48 +931,37 @@ window.godToolToggle = (tool) => {
     // Image: Open Picker immediately
     if (tool === 'image') return window.godToolImage();
 
-    // Music: If file is pending, send it. Otherwise open file picker.
+    // Music: New workflow
+    // 1st click -> Starts "Generating Music..."
+    // Then user uploads file
+    // 2nd click -> Attaches file and sets state to Done
     if (tool === 'music') {
-        const running = findLatestToolMsg(godChatId, tool, ['running']);
+        const running = findLatestToolMsg(godChatId, tool, 'running');
         if (running) {
-            // Stop it (set done in multiTools)
-            const mTools = running.meta.multiTools || [];
-            const tIdx = mTools.findIndex(t => t.type === 'music');
-            if (tIdx !== -1) {
-                mTools[tIdx].state = 'done';
+            // Check if we have a file ready
+            if (godToolState.music && godToolState.music.data) {
+                const fileData = godToolState.music;
+                const mTools = running.meta.multiTools || [];
+                const tIdx = mTools.findIndex(t => t.type === 'music');
+                if (tIdx !== -1) mTools[tIdx].state = 'done';
+
+                patchMessage(running.id, {
+                    content: 'Music Created',
+                    files: [{ name: fileData.name, type: fileData.type, data: fileData.data, size: fileData.size }],
+                    meta: { ...running.meta, multiTools: mTools, state: 'done' }
+                });
+                godToolState.music = false; // reset
+                renderGodToolButtons();
+                return;
+            } else {
+                // No file yet, maybe open picker again?
+                openModal('god-music-upload-modal');
+                return;
             }
-            patchMessage(running.id, { meta: { ...running.meta, multiTools: mTools, state: 'done' } });
-            renderGodToolButtons();
-            return;
         }
-
-        // Check if we have a pending file to send
-        if (godToolState.music && godToolState.music.data) {
-            const fileData = godToolState.music;
-            const chat = DB.getChats().find(c => c.id === godChatId);
-            const msg = {
-                id: nowId(),
-                chatId: godChatId,
-                userId: godUserId,
-                role: 'assistant',
-                content: 'Music Generated',
-                model: chat?.model || 'mistral-small-3.2',
-                files: [{ name: fileData.name, type: fileData.type, data: fileData.data, size: fileData.size }],
-                meta: {
-                    multiTools: [{ type: 'music', state: 'done' }],
-                    isAdminMode: true
-                },
-                createdAt: Date.now()
-            };
-            DB.saveMessage(msg);
-            godToolState.music = false; // Clear pending file
-            renderGodToolButtons();
-            renderGodMessages();
-            return;
-        }
-
-        // No pending file, open file picker
-        openModal('god-music-upload-modal');
+        // Start it
+        startGodTool('music', { state: 'running' });
+        patchMessage(DB.getMessages().at(-1).id, { content: 'Creatinig music...' });
         return;
     }
 };
@@ -1391,15 +1387,26 @@ window.openAdminSettings = () => {
     const promptInput = document.getElementById('admin-system-prompt');
     if (promptInput) promptInput.value = (cfg && cfg.systemPrompt) || '';
 
+    // speed
+    const speedInput = document.getElementById('admin-typewriter-speed');
+    if (speedInput) speedInput.value = (cfg && cfg.typewriterSpeed) || 10;
+
     // clear pwd
     const pwdInput = document.getElementById('new-admin-password');
     if (pwdInput) pwdInput.value = '';
+};
+
+window.deleteGodMessage = async (id) => {
+    if (!confirm('Удалить это сообщение?')) return;
+    await DB.deleteMessage(id);
+    renderGodMessages();
 };
 
 window.saveAdminSettings = () => {
     if (!ADMIN.get()) return;
     const pwd = document.getElementById('new-admin-password')?.value;
     const sysPrompt = document.getElementById('admin-system-prompt')?.value;
+    const speed = document.getElementById('admin-typewriter-speed')?.value;
 
     // Merge with existing config
     const current = DB.getAdminConfig() || {};
@@ -1407,6 +1414,7 @@ window.saveAdminSettings = () => {
 
     if (pwd) next.password = pwd;
     if (sysPrompt !== undefined) next.systemPrompt = sysPrompt;
+    if (speed !== undefined) next.typewriterSpeed = parseInt(speed) || 10;
 
     DB.saveAdminConfig(next);
     showToast('Настройки сохранены', 'success');

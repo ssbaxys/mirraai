@@ -53,6 +53,14 @@
     <main class="chat-main">
       <header class="chat-header">
         <div id="model-selector" class="model-selector" onclick="window.toggleModelDropdown(event)"></div>
+        <button class="btn icon-only chat-settings-btn" onclick="window.openChatSettings()" title="Настройки чата">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+          </svg>
+        </button>
         <button class="btn secondary small admin-only" style="display:none"
           onclick="window.enterAdmin()">Админ-панель</button>
         <div id="model-dropdown" class="model-dropdown"></div>
@@ -150,6 +158,14 @@
         <div class="profile-card-plan"><span class="user-plan badge">FREE</span></div>
       </div>
 
+      <div class="settings-group" style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <label class="setting-item"
+          style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+          <span style="font-size:14px;">Звуковые уведомления</span>
+          <input type="checkbox" id="notif-sound-toggle" onchange="window.toggleNotifSound(this.checked)" checked>
+        </label>
+      </div>
+
       <div class="profile-actions">
         <button class="btn secondary" onclick="window.openChangeNickModal()">Изменить имя</button>
         <button class="btn secondary" onclick="window.openChangePasswordModal()">Сменить пароль</button>
@@ -163,6 +179,25 @@
 
         <button class="btn danger" onclick="window.openDeleteAccountModal()">Удалить аккаунт</button>
         <button class="btn ghost" onclick="logout()">Выйти из аккаунта</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Settings Modal -->
+  <div id="chat-settings-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Настройки чата</h2>
+        <button class="btn-icon" onclick="closeModal('chat-settings-modal')">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <label style="font-size:12px;color:rgba(255,255,255,0.5);">Системный промпт (инструкция для чата)</label>
+        <textarea id="chat-system-prompt" class="input-field" rows="6"
+          placeholder="Например: Отвечай максимально коротко..."></textarea>
+        <p style="font-size:11px;color:rgba(255,255,255,0.4);">Если пусто, будет использоваться стандартный промпт из
+          настроек сайта.</p>
+        <button class="btn primary" style="width:100%;margin-top:8px;"
+          onclick="window.saveChatSystemPrompt()">Сохранить</button>
       </div>
     </div>
   </div>

@@ -23,7 +23,13 @@ const MISTRAL_MAPPING = {
   'devstral-2': 'devstral-2512',
   'mistral-tiny': 'mistral-tiny',       // fallback
   'mistral-medium': 'mistral-medium',   // fallback
-  'mistral-small': 'mistral-small-latest'
+  'mistral-small': 'mistral-small-latest',
+  'codestral-latest': 'codestral-latest',
+  'devstral-latest': 'devstral-latest',
+  'devstral-medium-latest': 'devstral-medium-latest',
+  'devstral-small-latest': 'devstral-small-latest',
+  'mistral-large-latest': 'mistral-large-latest',
+  'pixtral-large-latest': 'pixtral-large-latest'
 };
 
 
@@ -61,6 +67,9 @@ const MODELS = {
   'claude-haiku-4.5': { id: 'claude-haiku-4.5', name: 'Claude Haiku 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: false },
   'nano-banana': { id: 'nano-banana', name: 'Nano Banana', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: false },
   'grok-4.1-fast': { id: 'grok-4.1-fast', name: 'Grok 4.1 Fast', provider: 'xAI', icon: 'xai', type: 'text', isPro: false },
+  'devstral-latest': { id: 'devstral-latest', name: 'Devstral', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: false },
+  'devstral-medium-latest': { id: 'devstral-medium-latest', name: 'Devstral Medium', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: false },
+  'devstral-small-latest': { id: 'devstral-small-latest', name: 'Devstral Small', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: false },
 
   'claude-opus-4.5': { id: 'claude-opus-4.5', name: 'Claude Opus 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: true },
   'gemini-3-pro': { id: 'gemini-3-pro', name: 'Gemini 3 Pro', provider: 'Google AI Studio', icon: 'google', type: 'text', isPro: true },
@@ -71,7 +80,10 @@ const MODELS = {
   'gpt-5.2-chat': { id: 'gpt-5.2-chat', name: 'GPT-5.2 Chat', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true },
   'gpt-5.1-codex': { id: 'gpt-5.1-codex', name: 'GPT-5.1 Codex', provider: 'OpenAI API', icon: 'chatgpt', type: 'text', isPro: true },
   'claude-sonnet-4.5': { id: 'claude-sonnet-4.5', name: 'Claude Sonnet 4.5', provider: 'Anthropic', icon: 'anthropic', type: 'text', isPro: true },
-  'nano-banana-pro': { id: 'nano-banana-pro', name: 'Nano Banana Pro', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: true }
+  'nano-banana-pro': { id: 'nano-banana-pro', name: 'Nano Banana Pro', provider: 'Google AI Studio', icon: 'google', type: 'image', isPro: true },
+  'codestral-latest': { id: 'codestral-latest', name: 'Codestral', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true },
+  'mistral-large-latest': { id: 'mistral-large-latest', name: 'Mistral Large', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true },
+  'pixtral-large-latest': { id: 'pixtral-large-latest', name: 'Pixtral Large', provider: 'Mistral AI Studio', icon: 'mistral', type: 'text', isPro: true }
 };
 
 // ==================== HELPERS ====================
@@ -170,7 +182,15 @@ function parseMarkdown(text) {
   // links
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="md-link" href="$2" target="_blank" rel="noopener">$1</a>');
 
-  // line breaks
+  // headings (start of line only)
+  s = s.split('<br>').map(line => {
+    let l = line.trim();
+    if (l.startsWith('### ')) return `<h3 class="md-h3">${l.slice(4)}</h3>`;
+    if (l.startsWith('## ')) return `<h2 class="md-h2">${l.slice(3)}</h2>`;
+    if (l.startsWith('# ')) return `<h1 class="md-h1">${l.slice(2)}</h1>`;
+    return line;
+  }).join('<br>');
+
   s = s.replace(/\n/g, '<br>');
   return s;
 }
@@ -288,6 +308,22 @@ const DB = {
     else DB.state.chats.push(c);
     DB._notify();
     await set(ref(db, `${REMOTE_PATH}/chats/${c.id}`), c);
+  },
+
+  async deleteChat(chatId) {
+    DB.state.chats = DB.state.chats.filter(c => c.id !== chatId);
+    DB.state.messages = DB.state.messages.filter(m => m.chatId !== chatId);
+    DB._notify();
+    await remove(ref(db, `${REMOTE_PATH}/chats/${chatId}`));
+    // Also remove messages for that chat from remote if needed
+  },
+
+  async deleteMessage(id) {
+    const msg = DB.state.messages.find(m => m.id === id);
+    if (!msg) return;
+    DB.state.messages = DB.state.messages.filter(m => m.id !== id);
+    DB._notify();
+    await remove(ref(db, `${REMOTE_PATH}/messages/${id}`));
   },
 
   async saveMessage(m) {
@@ -1565,24 +1601,31 @@ function runTypewriter(el, content, finalHtml) {
   }
 
   el.innerHTML = '';
-  const cursor = document.createElement('span');
-  cursor.className = 'typewriter-cursor';
-
+  const cursorHtml = '<span class="typewriter-cursor"></span>';
   let i = 0;
-  const speed = 15; // ms per char
+
+  // Read speed from config or default to 10
+  const cfg = DB.getAdminConfig();
+  const speed = parseInt(cfg?.typewriterSpeed) || 10;
 
   function type() {
     if (i < content.length) {
-      // Create a temporary span for the next char to handle potential issues with innerHTML
-      const char = content[i];
-      el.textContent = content.substring(0, i + 1);
-      el.appendChild(cursor);
+      const partial = content.substring(0, i + 1);
+      // We parse partial markdown live.
+      // Note: partial syntax (like a half-closed bold) will just render as raw text until closed.
+      el.innerHTML = parseMarkdown(partial) + cursorHtml;
+
       i++;
       setTimeout(type, speed);
+
+      // Auto-scroll while typing
+      const container = document.getElementById('messages-container');
+      if (container) {
+        const nearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+        if (nearBottom) container.scrollTop = container.scrollHeight;
+      }
     } else {
-      // Done typing, set final formatted HTML
       el.innerHTML = finalHtml;
-      // Scroll to bottom if container exists
       const container = document.getElementById('messages-container');
       if (container) container.scrollTop = container.scrollHeight;
     }
@@ -1833,7 +1876,14 @@ window.sendMessage = async () => {
     // Start Generation State
     window.currentAbortCtrl = new AbortController();
     const modelId = currentModel;
-    callMistralAI(currentChatId, modelId, DB.getMessages());
+
+    // Per-chat system prompt logic
+    const chat = DB.getChats().find(c => c.id === currentChatId);
+    const chatPrompt = chat?.systemPrompt;
+    const adminCfg = DB.getAdminConfig();
+    const finalSystemPrompt = chatPrompt || adminCfg?.systemPrompt || 'Ты — полезный ИИ-ассистент Mirra AI.';
+
+    callMistralAI(currentChatId, modelId, DB.getMessages(), finalSystemPrompt);
   } else {
     // Manual Mode: We define a "virtual" abort controller to handle the "Stop" click
     window.currentAbortCtrl = new AbortController();
@@ -1871,7 +1921,7 @@ function updateSendButtonState(generating) {
 }
 
 
-async function callMistralAI(chatId, modelId, allMessages) {
+async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
   const user = DB.getCurrentUser();
   const mapName = MISTRAL_MAPPING[modelId];
 
@@ -1908,17 +1958,8 @@ async function callMistralAI(chatId, modelId, allMessages) {
     // setChatThinking(chatId, true, modelId); // This is in God Mode section... access it?
     // Let's just rely on async wait.
 
-    const cfg = DB.getAdminConfig();
-    const sysPrompt = cfg?.systemPrompt || 'Ты — полезный ИИ-ассистент Mirra AI.';
-
-    const history = allMessages.filter(m => m.chatId === chatId).map(m => ({
-      role: m.role,
-      content: m.content
-    }));
-
-    // Limit history to last 10
-    const limitedHistory = history.slice(-10);
-    const finalMessages = [{ role: 'system', content: sysPrompt }, ...limitedHistory];
+    // Use the passed systemPrompt
+    const finalMessages = [{ role: 'system', content: systemPrompt }, ...limitedHistory];
 
     const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
       method: "POST",
@@ -1951,6 +1992,14 @@ async function callMistralAI(chatId, modelId, allMessages) {
     };
 
     await DB.saveMessage(aiMsg);
+
+    // Unread & Sound Notification
+    if (chatId !== currentChatId) {
+      const chat = DB.getChats().find(c => c.id === chatId);
+      if (chat) await DB.saveChat({ ...chat, unread: true });
+    }
+    playNotificationSound();
+
     renderMessages(true);
 
   } catch (err) {
@@ -2605,5 +2654,59 @@ document.addEventListener('click', (e) => {
     if (el) el.style.display = 'none';
   }
 });
+
+// ==================== NOTIFICATIONS & CHAT SETTINGS ====================
+window.toggleNotifSound = (enabled) => {
+  const user = DB.getCurrentUser();
+  if (user) {
+    user.notifSound = enabled;
+    DB.saveUser(user);
+    showToast(enabled ? 'Уведомления включены' : 'Уведомления выключены', 'info');
+  }
+};
+
+window.openChatSettings = () => {
+  if (!currentChatId) return showToast('Сначала создайте или выберите чат', 'info');
+  const chat = DB.getChats().find(c => c.id === currentChatId);
+  const input = document.getElementById('chat-system-prompt');
+  if (input) input.value = chat?.systemPrompt || '';
+  openModal('chat-settings-modal');
+};
+
+window.saveChatSystemPrompt = async () => {
+  if (!currentChatId) return;
+  const prompt = document.getElementById('chat-system-prompt').value.trim();
+  const chat = DB.getChats().find(c => c.id === currentChatId);
+  if (chat) {
+    await DB.saveChat({ ...chat, systemPrompt: prompt });
+    showToast('Настройки чата сохранены', 'success');
+    closeModal('chat-settings-modal');
+  }
+};
+
+function playNotificationSound() {
+  const user = DB.getCurrentUser();
+  if (user && user.notifSound === false) return; // Disabled
+
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05);
+    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.3);
+  } catch (e) {
+    console.error('AudioContext error:', e);
+  }
+}
 
 // toggleUserTool is defined earlier in the file (line 676)
