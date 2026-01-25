@@ -492,11 +492,14 @@ async function ensureBoot() {
 
 window.handleLogin = async (e) => {
   e?.preventDefault?.();
+  if (window._isLoggingIn) return;
   const btn = $('#login-form button[type="submit"]');
-  if (btn) btn.disabled = true;
-  showToast('Проверка...', 'info');
 
   try {
+    window._isLoggingIn = true;
+    if (btn) btn.disabled = true;
+    showToast('Проверка...', 'info');
+
     await ensureBoot();
 
     const nick = ($('#login-nickname')?.value || '').trim();
@@ -514,17 +517,21 @@ window.handleLogin = async (e) => {
     console.error(err);
     showToast('Ошибка входа', 'error');
   } finally {
+    window._isLoggingIn = false;
     if (btn) btn.disabled = false;
   }
 };
 
 window.handleRegister = async (e) => {
   e?.preventDefault?.();
+  if (window._isRegistering) return;
   const btn = $('#register-form button[type="submit"]');
-  if (btn) btn.disabled = true;
-  showToast('Проверка...', 'info');
 
   try {
+    window._isRegistering = true;
+    if (btn) btn.disabled = true;
+    showToast('Проверка...', 'info');
+
     await ensureBoot();
 
     const nick = ($('#reg-nickname')?.value || '').trim();
@@ -559,6 +566,7 @@ window.handleRegister = async (e) => {
     console.error(err);
     showToast('Ошибка регистрации', 'error');
   } finally {
+    window._isRegistering = false;
     if (btn) btn.disabled = false;
   }
 };
