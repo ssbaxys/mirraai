@@ -309,38 +309,7 @@ window.deleteUser = async (id) => {
     showToast('Пользователь удалён', 'success');
 };
 
-function renderAdminModels() {
-    const wrap = document.getElementById('admin-models');
-    if (!wrap) return;
-    const avail = DB.getModelAvailability();
-    // We need 'all' models list. window.MODELS is global from app.js
-    const all = Object.values(window.MODELS || {});
-    const models = [...all].sort((a, b) => a.id.localeCompare(b.id));
-
-    wrap.innerHTML = models.map(m => {
-        const on = (m.id in avail) ? avail[m.id] : true;
-        return `
-      <div class="model-admin-row">
-        <div class="model-admin-left">
-          <div class="model-admin-ico">${window.ICONS[m.icon]}</div>
-          <div class="model-admin-info">
-            <div class="model-admin-name">${escapeHTML(m.name)}</div>
-            <div class="model-admin-provider">${escapeHTML(m.provider)}</div>
-          </div>
-        </div>
-        <button class="btn small ${on ? 'success' : 'secondary'}" onclick="window.toggleModelAvailability('${m.id}')">${on ? 'Доступна' : 'Недоступна'}</button>
-      </div>
-    `;
-    }).join('');
-}
-
-window.toggleModelAvailability = (id) => {
-    if (!ADMIN.get()) return;
-    const map = { ...DB.getModelAvailability() };
-    const cur = (id in map) ? !!map[id] : true;
-    map[id] = !cur;
-    DB.setModelAvailability(map);
-};
+// Legacy renderAdminModels removed - now using adminConfig.models system at line 1473+
 
 // ---- Admin Tickets ----
 let adminCurrentTicketId = null;
