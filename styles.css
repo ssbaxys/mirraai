@@ -498,6 +498,122 @@ select.input-field {
   margin-bottom: 40px;
 }
 
+/* Refresh Overlay */
+.refresh-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease;
+}
+
+.refresh-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.refresh-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.refresh-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px;
+  color: #fff;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Image Generation UI */
+.image-gen-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  gap: 12px;
+}
+
+.image-gen-icon {
+  width: 32px;
+  height: 32px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* Edit Image Button */
+.edit-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: 0.2s;
+}
+
+.message-image-container:hover .edit-image-btn {
+  opacity: 1;
+}
+
+.edit-image-btn.active-blue {
+  background: var(--primary);
+  opacity: 1;
+}
+
+/* Highlight Animation */
+@keyframes highlightYellow {
+  0% {
+    background: rgba(255, 235, 59, 0.3);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+.highlight-yellow {
+  animation: highlightYellow 2s ease-out forwards;
+}
+
 .hero-buttons {
   display: flex;
   gap: 12px;
@@ -3514,6 +3630,7 @@ img[alt="grok--v1"] {
   color: white;
   border-color: #ff4757;
 }
+
 /* Unread Dot & Heading Styles */
 .unread-dot {
   width: 8px;
@@ -3579,20 +3696,20 @@ img[alt="grok--v1"] {
 
 .toggle-slider:before {
   position: absolute;
-  content: " \;
- height: 18px;
- width: 18px;
- left: 3px;
- bottom: 3px;
- background-color: white;
- transition: .3s;
- border-radius: 50%;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
 }
 
-input:checked + .toggle-slider {
- background-color: var(--primary);
+input:checked+.toggle-slider {
+  background-color: var(--primary);
 }
 
-input:checked + .toggle-slider:before {
- transform: translateX(20px);
+input:checked+.toggle-slider:before {
+  transform: translateX(20px);
 }

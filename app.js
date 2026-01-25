@@ -87,6 +87,22 @@ const MODELS = {
 };
 
 // ==================== HELPERS ====================
+window.deleteChatUser = async (e, chatId) => {
+  e.stopPropagation();
+  if (!await uiConfirm('Удалить этот чат безвозвратно?')) return;
+
+  // Check ownership
+  const chat = DB.getChats().find(c => c.id === chatId);
+  const user = DB.getCurrentUser();
+  if (!chat || !user || chat.userId !== user.id) {
+    showToast('Ошибка доступа', 'error');
+    return;
+  }
+
+  await DB.deleteChat(chatId);
+  showToast('Чат удален', 'success');
+};
+
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
 window.$ = $;
@@ -439,12 +455,19 @@ const DB = {
     // Global listener for User Sync & Security & UI
     DB.subscribe((state) => {
       // Force Refresh Check (Client Side)
+      // Force Refresh Check (Client Side)
       const cfg = DB.getAdminConfig();
       if (cfg && cfg.forceRefresh) {
         const last = localStorage.getItem('mirra_last_refresh_ts');
         if (!last || Number(last) < cfg.forceRefresh) {
           localStorage.setItem('mirra_last_refresh_ts', cfg.forceRefresh);
-          location.reload();
+
+          const overlay = document.getElementById('refresh-overlay');
+          if (overlay) overlay.classList.add('active');
+
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
         }
       }
 
@@ -1732,13 +1755,43 @@ function renderMessages(force = false) {
     // We use single quotes for data-sig attribute to avoid escaping issues with JSON double quotes
     const safeSig = sig.replace(/'/g, "&#39;");
 
+    // Check for Image Edit eligibility
+    let editBtnHtml = '';
+    if (!isUser && (m.model?.includes('nano') || attachHtml.includes('<img') || textHtml.includes('![') || textHtml.includes('<img'))) {
+      editBtnHtml = `<button class="edit-image-btn" onclick="window.startEditImage('${m.id}')" title="Изменить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>`;
+    }
+
+    // Tools Metadata Badge
+    let toolsMetaHtml = '';
+    if (m.meta && m.meta.usedTools) {
+      const badges = m.meta.usedTools.map(t => {
+        let label = t;
+        let onclick = '';
+        let cls = 'tool-usage-badge';
+        if (t === 'generation') label = 'Генерация';
+        if (t === 'editing') {
+          label = 'Изменение';
+          if (m.meta.refId) {
+            onclick = `onclick="window.scrollToMsg('${m.meta.refId}')"`;
+            cls += ' clickable';
+          }
+        }
+        return `<span class="${cls}" ${onclick}>${label}</span>`;
+      }).join(' ');
+      if (badges) toolsMetaHtml = `<div class="msg-tools-meta" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;">${badges}</div>`;
+    }
+
     const msgHtml = `
       <div id="msg-${m.id}" class="message ${isUser ? 'user' : 'assistant'}" data-sig='${safeSig}'>
         <div class="message-avatar ${isUser ? 'user' : ''}">${avatar}</div>
-        <div class="message-body">
+        <div class="message-body" style="position:relative;">
+          ${editBtnHtml}
           <div class="message-header">${headerHtml}</div>
           ${textHtml}
-          ${attachHtml}
+          <div class="message-image-container">
+            ${attachHtml}
+          </div>
+          ${toolsMetaHtml}
         </div>
       </div>
     `;
@@ -1752,8 +1805,21 @@ function renderMessages(force = false) {
       if (!isUser && !animatedMessages.has(m.id) && isVeryRecent) {
         animatedMessages.add(m.id);
         const newEl = document.getElementById(`msg-${m.id}`);
+        // Inject tool placeholders logic if needed, but we do it via HTML construction above
+        // For Image Placeholder (Generation...):
+        // If content is empty text but has pending tool
+
         const textEl = newEl?.querySelector('.message-text');
-        if (textEl && !toolHtml) { // Only animate text, not tools
+        // Only run typewriter if we have actual text and it's NOT just an image container?
+        // Actually runTypewriter handles HTML.
+
+        // CUSTOM LOGIC: Edit Button & Metadata
+        // We need to inject the Edit button into the rendered message if needed, 
+        // OR better: we reconstructed msgHtml above, so we should have modified THAT string before insertion.
+        // Wait! I missed the msgHtml construction block in my previous view.
+        // I need to look at lines 1758 where `msgHtml` is defined.
+
+        if (textEl && !toolHtml) {
           runTypewriter(textEl, content, parseMarkdown(content));
         }
       }
@@ -1850,6 +1916,15 @@ window.sendMessage = async () => {
     if (tools.length === 1 && !currentUserThinking) {
       meta.usedTool = currentUserTool; // display logic might use this
     }
+  }
+
+  // Handle Image Edit Metadata
+  if (window.__editingRefId) {
+    if (!meta.usedTools) meta.usedTools = [];
+    if (!meta.usedTools.includes('generation')) meta.usedTools.push('generation');
+    meta.usedTools.push('editing');
+    meta.refId = window.__editingRefId;
+    window.__editingRefId = null;
   }
 
   const msg = {
@@ -2004,6 +2079,33 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
       signal: window.currentAbortCtrl?.signal
     });
 
+    // Image Placeholder Logic (Client Side)
+    // If model name implies image, inject a temp message with "Generation..."
+    // Actually, normally we'd save a "pending" message to DB.
+    // But since this is a simple client, let's just assume we want the UI state.
+    // The user asked for "SVG icon and Generation... text".
+
+    // We can simulate this by manually appending to the DOM or saving a temp message.
+    // Saving to DB is safer.
+    let tempMsgId = null;
+    const isImageModel = modelId.includes('nano') || modelId.includes('image');
+
+    if (isImageModel) {
+      tempMsgId = nowId();
+      const pendingMsg = {
+        id: tempMsgId,
+        chatId,
+        userId: user.id,
+        role: 'assistant',
+        content: '',
+        model: modelId,
+        createdAt: Date.now(),
+        meta: { tool: 'image', state: 'pending' } // We use this to render the placeholder
+      };
+      await DB.saveMessage(pendingMsg);
+      renderMessages(true);
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Mistral API Error Body: ", errorText);
@@ -2014,6 +2116,12 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
     console.log("Mistral API Response Data:", data);
 
     const ans = data.choices?.[0]?.message?.content || "";
+
+    // Remove placeholder
+    if (tempMsgId) {
+      await DB.deleteMessage(tempMsgId);
+    }
+
     if (!ans) {
       console.warn("Mistral API returned empty content", data);
       throw new Error("Пустой ответ от модели (см. консоль)");
@@ -2042,6 +2150,8 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
 
   } catch (err) {
     console.error(err);
+    if (tempMsgId) await DB.deleteMessage(tempMsgId); // Cleanup on error
+
     if (err.name === 'AbortError') {
       // Save stopped status
       const stopMsg = { id: nowId(), chatId, userId: user.id, role: 'system', content: 'Генерация приостановлена пользователем', createdAt: Date.now() };
@@ -2748,3 +2858,49 @@ function playNotificationSound() {
 }
 
 // toggleUserTool is defined earlier in the file (line 676)
+
+// ==================== IMAGE EDITING HELPERS ====================
+window.startEditImage = (msgId) => {
+  // 1. Activate Image Tool
+  if (window.currentUserTool !== 'image') {
+    window.toggleUserTool('image');
+  }
+
+  // 2. Set global edit ref state (we'll store it on window for simplicity)
+  window.__editingRefId = msgId;
+
+  // 3. Highlight button
+  const btn = document.querySelector(`#msg-${msgId} .edit-image-btn`);
+  if (btn) btn.classList.add('active-blue');
+
+  // 4. Toast
+  showToast('Режим изменения изображения активирован', 'info');
+};
+
+window.scrollToMsg = (msgId) => {
+  const el = document.getElementById(`msg-${msgId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('highlight-yellow');
+    void el.offsetWidth; // trigger reflow
+    el.classList.add('highlight-yellow');
+  }
+};
+
+window.playNotificationSound = function () { // Export globally
+  const user = DB.getCurrentUser();
+  if (user && user.notifSound === false) return; // Disabled
+
+  try {
+    // Use HTML5 Audio for background play support
+    // Simple glass ping sound (Data URI)
+    const audio = new Audio('data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWgAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAABAAABAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA//uQZAAH8AAAEAAAAAAAABAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA//uQZAAH8AAAEAAAAAAAABAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA//uQZAAH8AAAEAAAAAAAABAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA///uQZAAH8AAAEAAAAAAAABAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA');
+    // Ok that was empty. Let's use a real one.
+    const realBeep = new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/GalaxyInvaders/pause.wav');
+    realBeep.volume = 0.4;
+    realBeep.play().catch(e => console.error("Audio Play Error:", e));
+  } catch (e) {
+    console.error('Audio error:', e);
+  }
+};
+window.deleteChatUser = deleteChatUser;
