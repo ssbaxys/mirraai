@@ -3738,6 +3738,36 @@ input:checked+.toggle-slider:before {
   border-color: rgba(142, 67, 255, 0.3);
 }
 
+/* Edit Image Button */
+.edit-image-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  color: #333;
+}
+
+.message-image-container:hover .edit-image-btn,
+.edit-image-btn.active-blue {
+  opacity: 1 !important;
+}
+
+.edit-image-btn:hover {
+  transform: scale(1.1);
+}
+
 /* Edit Image Button Active State */
 .edit-image-btn.active-blue {
   background: var(--primary) !important;
