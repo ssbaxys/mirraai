@@ -1758,7 +1758,14 @@ function renderMessages(force = false) {
     // Check for Image Edit eligibility
     let editBtnHtml = '';
     if (!isUser && (m.model?.includes('nano') || attachHtml.includes('<img') || textHtml.includes('![') || textHtml.includes('<img'))) {
-      editBtnHtml = `<button id="edit-btn-${m.id}" class="edit-image-btn" onclick="window.startEditImage('${m.id}')" title="Изменить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>`;
+      editBtnHtml = `
+        <div class="edit-image-btn-wrap">
+          <button id="edit-btn-${m.id}" class="edit-image-btn" onclick="window.startEditImage('${m.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width:16px;height:16px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>Изменить</span>
+          </button>
+        </div>
+      `;
     }
 
     // Tools Metadata Badge
@@ -1788,9 +1795,9 @@ function renderMessages(force = false) {
           <div class="message-header">${headerHtml}</div>
           ${textHtml}
           <div class="message-image-container">
-            ${editBtnHtml}
             ${attachHtml}
           </div>
+          ${editBtnHtml}
           ${toolsMetaHtml}
         </div>
       </div>

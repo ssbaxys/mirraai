@@ -3738,45 +3738,53 @@ input:checked+.toggle-slider:before {
   border-color: rgba(142, 67, 255, 0.3);
 }
 
-/* Edit Image Button */
-.edit-image-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  background: white;
-  border-radius: 50%;
+/* Edit Image Button Wrapper */
+.edit-image-btn-wrap {
+  margin-top: 10px;
+  margin-bottom: 6px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  color: #333;
 }
 
-.message-image-container:hover .edit-image-btn,
-.edit-image-btn.active-blue {
-  opacity: 1 !important;
+.edit-image-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+.edit-image-btn svg {
+  stroke: #fff;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
 }
 
 .edit-image-btn:hover {
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-/* Edit Image Button Active State */
 .edit-image-btn.active-blue {
-  background: var(--primary) !important;
-  color: #fff !important;
-  opacity: 1 !important;
+  background: #2480ff !important;
+  border-color: #2480ff !important;
+  box-shadow: 0 0 20px rgba(36, 128, 255, 0.5);
 }
 
-/* Ensure message body has relative positioning for button if we kept it outside, 
-   but we are moving it inside. Still good to have. */
+.edit-image-btn.active-blue svg {
+  transform: rotate(-10deg);
+}
+
 .message-body {
   position: relative;
 }
