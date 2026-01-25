@@ -3828,6 +3828,7 @@ input:checked+.toggle-slider:before {
 }
 
 .model-option-name {
+  font-family: 'Unbounded', sans-serif;
   font-size: 13px;
   font-weight: 500;
 }
