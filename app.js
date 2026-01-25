@@ -376,14 +376,12 @@ const DB = {
   // async commit() { ... },
 
 
-  async init(timeoutMs = 20000) {
+  async init() {
     // Global listener for User Sync & Security & UI
     DB.subscribe((state) => {
       let local = DB.getCurrentUser();
       if (local) {
-        // Sync local storage with DB state for the current user (e.g. admin rights granted remotely)
         const fresh = state.users.find(u => u.id === local.id);
-        // Only update if changed prevents loop? No, DB.setCurrentUser just writes storage.
         if (fresh && JSON.stringify(fresh) !== JSON.stringify(local)) {
           DB.setCurrentUser(fresh);
           local = fresh;
@@ -395,78 +393,57 @@ const DB = {
         window.location.href = 'chat.html';
       }
 
-      // Update UI elements that depend on user state (Admin button etc)
       if (window.renderProfile) window.renderProfile();
     });
 
     return new Promise((resolve) => {
       let done = false;
-      const finish = (ok) => {
-        if (done) return;
-        done = true;
-        resolve(!!ok);
+
+      // Helper
+      const toArray = (obj) => obj ? Object.values(obj) : [];
+
+      const attach = (key, transform) => {
+        onValue(ref(db, `${REMOTE_PATH}/${key}`), (snap) => {
+          const val = snap.val();
+          DB.state[key] = transform ? transform(val) : toArray(val);
+          DB._notify();
+
+          // Resolve boot as soon as users are loaded (critical for auth)
+          if (key === 'users' && !done) {
+            done = true;
+            DB.online = true;
+            resolve(true);
+          }
+        }, (err) => {
+          console.error(`DB error [${key}]:`, err);
+        });
       };
 
-      const t = setTimeout(() => {
-        DB.online = false;
-        console.warn('[DB.init] timeout: no snapshot');
-        showToast('Firebase: нет ответа (проверьте правила/доступ)', 'error');
-        finish(false);
-      }, timeoutMs);
+      // Granular subscriptions
+      attach('users');
+      attach('chats');
+      attach('messages');
+      attach('tickets');
+      attach('ticketMessages');
+      attach('folders');
 
-      try {
-        if (DB._unsub) {
-          try { off(ref(db, REMOTE_PATH)); } catch { }
-          DB._unsub = null;
-        }
+      // Special handling
+      onValue(ref(db, `${REMOTE_PATH}/modelAvailability`), (snap) => {
+        const d = snap.val();
+        DB.state.modelAvailability = Array.isArray(d)
+          ? Object.fromEntries(d.map(m => [m.id, !!m.available]))
+          : (d || {});
+        DB._notify();
+      });
 
-        DB._unsub = onValue(
-          ref(db, REMOTE_PATH),
-          (snap) => {
-            clearTimeout(t);
-            DB.online = true;
-            const data = snap.val() || {};
+      onValue(ref(db, `${REMOTE_PATH}/adminConfig`), (snap) => {
+        DB.state.adminConfig = snap.val() || null;
+        DB._notify();
+      });
 
-            // Helper to convert Object {id: val} -> Array [val]
-            const toArray = (obj) => obj ? Object.values(obj) : [];
-
-            DB.state = {
-              users: toArray(data.users),
-              chats: toArray(data.chats),
-              messages: toArray(data.messages),
-              tickets: toArray(data.tickets),
-              ticketMessages: toArray(data.ticketMessages),
-              folders: toArray(data.folders),
-              modelAvailability: Array.isArray(data.modelAvailability)
-                ? Object.fromEntries(data.modelAvailability.map(m => [m.id, !!m.available]))
-                : (data.modelAvailability || {}), // support both if legacy exists
-              adminConfig: data.adminConfig || null,
-              version: data.version || 0
-            };
-
-            // Seed admin user removed for security
-            // if (!DB.getUsers().some(u => ...)) { ... }
-
-
-
-            DB._notify();
-            finish(true);
-          },
-          (err) => {
-            clearTimeout(t);
-            DB.online = false;
-            console.error('[DB.init] onValue error:', err);
-            showToast('Firebase: ошибка подключения (rules?)', 'error');
-            finish(false);
-          }
-        );
-      } catch (e) {
-        clearTimeout(t);
-        DB.online = false;
-        console.error('[DB.init] exception:', e);
-        showToast('Firebase: ошибка инициализации', 'error');
-        finish(false);
-      }
+      onValue(ref(db, `${REMOTE_PATH}/version`), (snap) => {
+        DB.state.version = snap.val() || 0;
+      });
     });
   }
 };
