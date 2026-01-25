@@ -162,11 +162,13 @@
       </div>
 
       <div class="settings-group" style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <label class="setting-item"
-          style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+        <div class="setting-item" style="display:flex; justify-content:space-between; align-items:center;">
           <span style="font-size:14px;">Звуковые уведомления</span>
-          <input type="checkbox" id="notif-sound-toggle" onchange="window.toggleNotifSound(this.checked)" checked>
-        </label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notif-sound-toggle" onchange="window.toggleNotifSound(this.checked)" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
 
       <div class="profile-actions">

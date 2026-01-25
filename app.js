@@ -1988,7 +1988,8 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
       },
       body: JSON.stringify({
         model: mapName || 'mistral-small-latest',
-        messages: finalMessages
+        messages: finalMessages,
+        safe_prompt: false // Ensure we don't get blocked easily
       }),
       signal: window.currentAbortCtrl?.signal
     });
@@ -1998,7 +1999,11 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
     }
 
     const data = await response.json();
-    const ans = data.choices?.[0]?.message?.content || "Нет ответа.";
+    const ans = data.choices?.[0]?.message?.content || "";
+    if (!ans) {
+      console.warn("Mistral API returned empty content", data);
+      throw new Error("Пустой ответ от модели");
+    }
 
     const aiMsg = {
       id: nowId(),
@@ -2497,18 +2502,18 @@ window.renderProfile = () => {
   const user = DB.getCurrentUser();
 
   // Admin Button Logic
-  const admBtn = document.querySelector('.admin-only'); // Panel link (for existing admins)
+  // Admin Button Logic - Toggle ALL admin-only elements
+  const admBtns = document.querySelectorAll('.admin-only');
   const gatewayBtn = document.querySelector('.admin-enter-only'); // Gate button (for login)
-
-  if (admBtn) {
+  admBtns.forEach(btn => {
     if (user && user.isAdmin) {
-      admBtn.style.display = 'inline-flex';
-      admBtn.classList.remove('hidden');
+      btn.style.display = 'inline-flex';
+      btn.classList.remove('hidden');
     } else {
-      admBtn.style.display = 'none';
-      admBtn.classList.add('hidden');
+      btn.style.display = 'none';
+      btn.classList.add('hidden');
     }
-  }
+  });
 
   // Gateway button allows entering password to BECOME admin
   if (gatewayBtn) {
