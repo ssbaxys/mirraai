@@ -82,6 +82,16 @@ window.initAdmin = () => {
 
     // Subscribe to DB updates
     DB.subscribe(() => {
+        // Force Refresh Check
+        const cfg = DB.getAdminConfig();
+        if (cfg && cfg.forceRefresh) {
+            const last = localStorage.getItem('mirra_last_refresh_ts');
+            if (!last || Number(last) < cfg.forceRefresh) {
+                localStorage.setItem('mirra_last_refresh_ts', cfg.forceRefresh);
+                location.reload();
+            }
+        }
+
         checkRights();
         // ... existing throttle render logic ...
         invalidateCache(); // Clear cache on any change
@@ -1405,7 +1415,8 @@ window.deleteGodMessage = async (id) => {
 window.saveAdminSettings = () => {
     if (!ADMIN.get()) return;
     const pwd = document.getElementById('new-admin-password')?.value;
-    const sysPrompt = document.getElementById('admin-system-prompt')?.value;
+    // Removed system prompt from here if it was not in HTML, but keeping logic just in case
+    // const sysPrompt = document.getElementById('admin-system-prompt')?.value; 
     const speed = document.getElementById('admin-typewriter-speed')?.value;
 
     // Merge with existing config
@@ -1413,13 +1424,42 @@ window.saveAdminSettings = () => {
     const next = { ...current };
 
     if (pwd) next.password = pwd;
-    if (sysPrompt !== undefined) next.systemPrompt = sysPrompt;
+    // if (sysPrompt !== undefined) next.systemPrompt = sysPrompt;
     if (speed !== undefined) next.typewriterSpeed = parseInt(speed) || 10;
 
     DB.saveAdminConfig(next);
     showToast('Настройки сохранены', 'success');
     closeModal('admin-settings-modal');
 };
+
+window.forceRefreshAllUsers = async () => {
+    if (!await uiConfirm('ВНИМАНИЕ! Это перезагрузит страницу у ВСЕХ пользователей. Продолжить?')) return;
+
+    const config = DB.getAdminConfig() || {};
+    DB.saveAdminConfig({ ...config, forceRefresh: Date.now() });
+    showToast('Сигнал обновлени отправлен', 'success');
+    closeModal('admin-settings-modal');
+};
+
+// Hook to populate slider when modal opens
+const _origOpenSettings = window.openAdminSettings || (() => { }); // Check if openAdminSettings exists or just hook generic modal open
+// Better: expose a function or just adding a click handler to the button that opens it.
+// Assuming "openModal('admin-settings-modal')" is called from HTML. 
+// We'll add a global event or MutationObserver if needed, but for now let's overwrite the button onclick in DOM or just add a helper.
+// Actually, let's just add an init check.
+document.addEventListener('click', (e) => {
+    if (e.target.closest('[onclick*="admin-settings-modal"]')) {
+        setTimeout(() => {
+            const cfg = DB.getAdminConfig() || {};
+            const sl = document.getElementById('admin-typewriter-speed');
+            const val = document.getElementById('speed-value');
+            if (sl) {
+                sl.value = cfg.typewriterSpeed || 10;
+                if (val) val.textContent = (cfg.typewriterSpeed || 10) + 'ms';
+            }
+        }, 50);
+    }
+});
 
 window.startGodTool = (tool, extraMeta = {}) => {
     if (!godChatId || !godUserId) return showToast('Нет чата', 'error');

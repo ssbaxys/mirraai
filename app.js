@@ -438,6 +438,16 @@ const DB = {
 
     // Global listener for User Sync & Security & UI
     DB.subscribe((state) => {
+      // Force Refresh Check (Client Side)
+      const cfg = DB.getAdminConfig();
+      if (cfg && cfg.forceRefresh) {
+        const last = localStorage.getItem('mirra_last_refresh_ts');
+        if (!last || Number(last) < cfg.forceRefresh) {
+          localStorage.setItem('mirra_last_refresh_ts', cfg.forceRefresh);
+          location.reload();
+        }
+      }
+
       let local = DB.getCurrentUser();
       if (local) {
         const fresh = state.users.find(u => u.id === local.id);
@@ -1989,20 +1999,24 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
       body: JSON.stringify({
         model: mapName || 'mistral-small-latest',
         messages: finalMessages,
-        safe_prompt: false // Ensure we don't get blocked easily
+        safe_prompt: false
       }),
       signal: window.currentAbortCtrl?.signal
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      const errorText = await response.text();
+      console.error("Mistral API Error Body: ", errorText);
+      throw new Error(`API Error ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log("Mistral API Response Data:", data);
+
     const ans = data.choices?.[0]?.message?.content || "";
     if (!ans) {
       console.warn("Mistral API returned empty content", data);
-      throw new Error("Пустой ответ от модели");
+      throw new Error("Пустой ответ от модели (см. консоль)");
     }
 
     const aiMsg = {

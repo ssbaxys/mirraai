@@ -317,10 +317,21 @@
           <input id="new-admin-password" type="password" class="input-field" placeholder="Новый пароль">
         </div>
         <div>
-          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;display:block;">Скорость печати (мс
-            на символ, по умолчанию 10)</label>
-          <input id="admin-typewriter-speed" type="number" class="input-field" placeholder="10">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <label style="font-size:12px;color:rgba(255,255,255,0.5);">Скорость печати (мс)</label>
+            <span id="speed-value" style="font-size:12px;color:var(--primary);">10ms</span>
+          </div>
+          <input id="admin-typewriter-speed" type="range" class="input-field" min="0" max="100" step="1"
+            oninput="document.getElementById('speed-value').textContent = this.value + 'ms'">
         </div>
+
+        <div style="padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
+          <label style="font-size:12px;color:var(--danger);margin-bottom:6px;display:block;">Опасная зона</label>
+          <button class="btn danger full small" onclick="window.forceRefreshAllUsers()">
+            ⟳ Принудительно обновить у всех
+          </button>
+        </div>
+
         <button class="btn primary full" onclick="window.saveAdminSettings()">Сохранить настройки</button>
       </div>
     </div>
