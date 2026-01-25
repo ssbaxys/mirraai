@@ -836,6 +836,7 @@ window.initChat = function () {
       }
       renderProfile();
       renderChatList();
+      renderModelSelector();
 
       // Real-time ENFORCEMENT of model availability/plan
       const chat = DB.getChats().find(c => c.id === currentChatId);
@@ -2347,8 +2348,18 @@ function renderModelSelector() {
 }
 
 function getModelAvailability(id) {
+  // 1. Check explicit disable/enable from Admin Panel
   const map = DB.getModelAvailability();
-  if (map && typeof map === 'object' && id in map) return !!map[id];
+  if (map && typeof map === 'object' && id in map && map[id] === false) return false;
+
+  // 2. Check model modes (Manual/Auto/Admin)
+  // If mode is 'admin', only admins can see/use this model in chat.
+  const adminCfg = DB.getAdminConfig();
+  if (adminCfg && adminCfg.modelModes && adminCfg.modelModes[id] === 'admin') {
+    const user = DB.getCurrentUser();
+    if (!user || !user.isAdmin) return false;
+  }
+
   return true;
 }
 
