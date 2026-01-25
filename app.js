@@ -15,7 +15,7 @@ const firebaseConfig = {
   measurementId: "G-NYKPHXPXKC"
 };
 
-const MISTRAL_API_KEY = "Gwci6DvnuEdvSiCZN78KkkVFSsHlnXGo";
+const MISTRAL_API_KEY = "UetH9ifY2y9xU7JL0bYLbuvXrxrVuYrN";
 
 const MISTRAL_MAPPING = {
   'mistral-small-3.2': 'mistral-small-2506',
@@ -955,17 +955,21 @@ function renderChatsOnly(list) {
   if (!list.length) return ''; // <div class="empty-folder">Пусто</div> ? 
   return list.map(chat => {
     const model = getSafeModel(chat.model);
+    const isUnread = chat.unread && currentChatId !== chat.id;
     return `
       <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" 
            draggable="true"
            ondragstart="window.handleDragStart(event, '${chat.id}')"
            ondragover="window.handleDragOver(event, 'chat', '${chat.id}')"
            ondrop="window.handleDrop(event, 'chat', '${chat.id}')"
-           onclick="window.openChat('${chat.id}')">
+           onclick="window.selectChat('${chat.id}')">
         <div class="chat-item-icon">${ICONS[model.icon]}</div>
         <div class="chat-item-info">
-          <div class="chat-item-name">${escapeHTML(chat.name || 'Диалог')}</div>
+          <div class="chat-item-name">${escapeHTML(chat.name || 'Диалог')} ${isUnread ? '<span class="unread-dot"></span>' : ''}</div>
           <div class="chat-item-model">${escapeHTML(model.name)}</div>
+        </div>
+        <div class="chat-item-actions">
+           <button class="chat-item-delete" onclick="event.stopPropagation(); window.deleteChatModal('${chat.id}')">×</button>
         </div>
       </div>
     `;
@@ -1164,10 +1168,15 @@ window.createChat = () => {
   if (m) m.classList.add('hidden');
 };
 
-window.openChat = (id) => {
+window.selectChat = async (id) => {
   currentChatId = id;
   const chat = DB.getChats().find(c => c.id === id);
-  if (chat) currentModel = chat.model;
+  if (chat) {
+    currentModel = chat.model;
+    if (chat.unread) {
+      await DB.saveChat({ ...chat, unread: false });
+    }
+  }
 
   // Restore saved tool selection for this chat
   currentUserTool = chat?.selectedTool || null;
@@ -1185,7 +1194,7 @@ window.openChat = (id) => {
   $('#messages-area')?.classList.remove('hidden');
   renderModelSelector();
   renderMessages(true);
-  // refresh thinking indicator when switching chat
+  renderChatList();
   renderProfile();
 };
 
@@ -1728,8 +1737,9 @@ function renderMessages(force = false) {
       existingEl.outerHTML = msgHtml;
     } else {
       container.insertAdjacentHTML('beforeend', msgHtml);
-      // Trigger typewriter for new assistant messages
-      if (!isUser && !animatedMessages.has(m.id)) {
+      // Trigger typewriter only for REALLY new assistant messages (e.g. last 15s)
+      const isVeryRecent = (Date.now() - (m.createdAt || 0)) < 15000;
+      if (!isUser && !animatedMessages.has(m.id) && isVeryRecent) {
         animatedMessages.add(m.id);
         const newEl = document.getElementById(`msg-${m.id}`);
         const textEl = newEl?.querySelector('.message-text');
@@ -1930,7 +1940,7 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
   // If mapName is undefined, it might be GPT/Claude. User gave key only for Mistral.
   // I will use Mistral Key for "devstral"/"mistral" models.
 
-  const isMistralFamily = modelId.includes('mistral') || modelId.includes('devstral');
+  const isMistralFamily = modelId.includes('mistral') || modelId.includes('devstral') || modelId.includes('codestral') || modelId.includes('pixtral');
 
   if (!isMistralFamily) {
     // Mock for others
@@ -1957,6 +1967,15 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
     // We can set it?
     // setChatThinking(chatId, true, modelId); // This is in God Mode section... access it?
     // Let's just rely on async wait.
+
+    // Gather history
+    const history = allMessages.filter(m => m.chatId === chatId).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    // Limit history to last 10
+    const limitedHistory = history.slice(-10);
 
     // Use the passed systemPrompt
     const finalMessages = [{ role: 'system', content: systemPrompt }, ...limitedHistory];

@@ -138,6 +138,18 @@
               Мысли</button>
             <button id="god-tool-image" class="god-tool-btn" onclick="window.godToolToggle('image')">Фото</button>
             <button id="god-tool-music" class="god-tool-btn" onclick="window.godToolToggle('music')">Музыка</button>
+            <button class="chat-settings-btn" onclick="window.openChatSettings()" title="Инструкции чата"
+              style="margin: 0; width: 40px; height: 32px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:18px;height:18px">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
           </div>
           <div id="god-messages" class="god-messages"></div>
           <div class="god-input-area">
@@ -322,6 +334,25 @@
         <button class="btn-icon" onclick="closeModal('image-viewer-modal')">×</button>
       </div>
       <img id="image-viewer-img" class="image-modal-img" src="" alt="Изображение">
+    </div>
+  </div>
+
+  <!-- Chat Settings Modal -->
+  <div id="chat-settings-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Настройки чата</h2>
+        <button class="btn-icon" onclick="closeModal('chat-settings-modal')">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <label style="font-size:12px;color:rgba(255,255,255,0.5);">Системный промпт (инструкция для чата)</label>
+        <textarea id="chat-system-prompt" class="input-field" rows="6"
+          placeholder="Например: Отвечай максимально коротко..."></textarea>
+        <p style="font-size:11px;color:rgba(255,255,255,0.4);">Если пусто, будет использоваться стандартный промпт из
+          настроек сайта.</p>
+        <button class="btn primary" style="width:100%;margin-top:8px;"
+          onclick="window.saveChatSystemPrompt()">Сохранить</button>
+      </div>
     </div>
   </div>
 

@@ -1469,3 +1469,24 @@ window.startGodTool = (tool, extraMeta = {}) => {
         setTimeout(() => window.openMusicUpload(msg), 50);
     }
 };
+
+window.openChatSettings = () => {
+    const chatId = godChatId || window.currentChatId;
+    if (!chatId) return showToast('Сначала выберите чат', 'info');
+    const chat = DB.getChats().find(c => c.id === chatId);
+    const input = document.getElementById('chat-system-prompt');
+    if (input) input.value = chat?.systemPrompt || '';
+    openModal('chat-settings-modal');
+};
+
+window.saveChatSystemPrompt = async () => {
+    const chatId = godChatId || window.currentChatId;
+    if (!chatId) return;
+    const prompt = document.getElementById('chat-system-prompt').value.trim();
+    const chat = DB.getChats().find(c => c.id === chatId);
+    if (chat) {
+        await DB.saveChat({ ...chat, systemPrompt: prompt });
+        showToast('Инструкции сохранены', 'success');
+        closeModal('chat-settings-modal');
+    }
+};

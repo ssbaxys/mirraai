@@ -3524,3 +3524,29 @@ img[alt="grok--v1"] {
   box-shadow: 0 0 10px var(--primary);
   flex-shrink: 0;
 }
+
+/* Chat Settings Button - Purple Style */
+.chat-settings-btn {
+  background: var(--primary) !important;
+  color: white !important;
+  border: none !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 0 8px;
+  transition: 0.2s;
+  padding: 0;
+}
+
+.chat-settings-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.chat-settings-btn svg {
+  color: white !important;
+}
