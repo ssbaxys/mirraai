@@ -3715,6 +3715,10 @@ input:checked+.toggle-slider:before {
 }
 
 /* Model Dropdown */
+.model-selector {
+  position: relative;
+}
+
 .model-select-trigger {
   display: flex;
   align-items: center;
@@ -3733,8 +3737,11 @@ input:checked+.toggle-slider:before {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 240px;
-  background: #1e1e2e;
+  min-width: 220px;
+  max-width: 300px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 6px;
@@ -3742,7 +3749,7 @@ input:checked+.toggle-slider:before {
   flex-direction: column;
   gap: 2px;
   z-index: 100;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
 }
 
 .model-dropdown.active {
@@ -3757,13 +3764,144 @@ input:checked+.toggle-slider:before {
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
+  white-space: nowrap;
 }
 
 .model-option:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .model-option.active {
   background: rgba(var(--primary-rgb), 0.15);
   color: var(--primary);
+}
+
+.model-option .model-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-option .model-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.model-option .model-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Edit Image Button */
+.edit-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  opacity: 0.6;
+  transition: 0.2s;
+  z-index: 10;
+}
+
+.edit-image-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.edit-image-btn.active-blue {
+  background: var(--primary);
+  border-color: var(--primary);
+  opacity: 1;
+  color: white;
+}
+
+/* Tool Usage Badges */
+.tool-usage-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tool-usage-badge.clickable {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tool-usage-badge.clickable:hover {
+  background: rgba(var(--primary-rgb), 0.15);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Highlight Yellow Animation */
+@keyframes highlightYellow {
+  0% {
+    background-color: rgba(255, 215, 0, 0.4);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+.highlight-yellow {
+  animation: highlightYellow 1.5s ease-out forwards;
+}
+
+/* Refresh Overlay */
+.refresh-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.refresh-overlay.active {
+  display: flex;
+}
+
+.refresh-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.refresh-text {
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
 }

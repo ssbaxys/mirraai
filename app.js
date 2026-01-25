@@ -558,6 +558,8 @@ const DB = {
       onValue(ref(db, `${REMOTE_PATH}/adminConfig`), (snap) => {
         DB.state.adminConfig = snap.val() || null;
         DB._notify();
+        // Instant sync: re-render model selector when config changes
+        if (window.renderModelSelector) window.renderModelSelector();
       });
 
       onValue(ref(db, `${REMOTE_PATH}/version`), (snap) => {
