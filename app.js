@@ -87,8 +87,8 @@ const MODELS = {
 };
 
 // ==================== HELPERS ====================
-window.deleteChatUser = async (e, chatId) => {
-  e.stopPropagation();
+window.deleteChatModal = async (chatId) => {
+  // Use event from arguments if needed, but normally we just need chatId
   if (!await uiConfirm('Удалить этот чат безвозвратно?')) return;
 
   // Check ownership
@@ -176,41 +176,60 @@ function renderFileBlock(file) {
 }
 
 // Very safe minimal markdown (escape first)
+// Comprehensive Markdown support using marked.js
 function parseMarkdown(text) {
+  if (typeof marked === 'undefined') {
+    // Fallback if library not loaded
+    return escapeHTML(String(text || '')).replace(/\n/g, '<br>');
+  }
+
   const raw = String(text || '');
-  let s = escapeHTML(raw);
 
-  // code fences ```lang\ncode```
-  s = s.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (m, lang, code) => {
-    const l = escapeHTML(lang || '').trim();
-    const c = code.replace(/\n$/, '');
-    return `<div class="code-block"><button class="code-copy-btn" data-copy="${escapeHTML(c)}" title="Копировать">⧉</button><code>${escapeHTML(c)}</code></div>`;
+  // Custom renderer to keep our specific UI elements
+  const renderer = new marked.Renderer();
+
+  // Custom code block: keep the copy button
+  renderer.code = (code, lang) => {
+    // code is already a string in modern marked
+    const c = typeof code === 'object' ? code.text : code;
+    const cleanCode = c.replace(/\n$/, '');
+    return `<div class="code-block"><button class="code-copy-btn" data-copy="${escapeHTML(cleanCode)}" title="Копировать">⧉</button><code>${escapeHTML(cleanCode)}</code></div>`;
+  };
+
+  // Add classes to tags for styling consistency with old styles if needed
+  renderer.heading = (text, level) => {
+    const txt = typeof text === 'object' ? text.text : text;
+    return `<h${level} class="md-h${level}">${txt}</h${level}>`;
+  };
+  renderer.list = (body, ordered, start) => {
+    const tag = ordered ? 'ol' : 'ul';
+    const cls = ordered ? 'md-ol' : 'md-ul';
+    return `<${tag} class="${cls}"${ordered && start !== 1 ? ` start="${start}"` : ''}>${body}</${tag}>`;
+  };
+  renderer.listitem = (text) => {
+    const txt = typeof text === 'object' ? text.text : text;
+    return `<li class="md-li">${txt}</li>`;
+  };
+  renderer.blockquote = (quote) => {
+    return `<blockquote class="md-quote">${quote}</blockquote>`;
+  };
+  renderer.hr = () => {
+    return `<hr class="md-hr">`;
+  };
+  renderer.link = (href, title, text) => {
+    return `<a class="md-link" href="${href}" title="${title || ''}" target="_blank" rel="noopener">${text}</a>`;
+  };
+  renderer.image = (href, title, text) => {
+    return `<img class="message-image" src="${href}" alt="${text || ''}" title="${title || ''}">`;
+  };
+
+  return marked.parse(raw, {
+    renderer,
+    gfm: true,
+    breaks: true,
+    headerIds: false,
+    mangle: false
   });
-
-  // inline code
-  s = s.replace(/`([^`]+)`/g, (m, c) => `<span class="inline-code" data-copy="${escapeHTML(c)}">${escapeHTML(c)}</span>`);
-
-  // bold/italic/del
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
-  s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-
-  // links
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="md-link" href="$2" target="_blank" rel="noopener">$1</a>');
-
-  // headings (start of line only)
-  s = s.split('<br>').map(line => {
-    let l = line.trim();
-    if (l.startsWith('### ')) return `<h3 class="md-h3">${l.slice(4)}</h3>`;
-    if (l.startsWith('## ')) return `<h2 class="md-h2">${l.slice(3)}</h2>`;
-    if (l.startsWith('# ')) return `<h1 class="md-h1">${l.slice(2)}</h1>`;
-    return line;
-  }).join('<br>');
-
-  s = s.replace(/\n/g, '<br>');
-  return s;
 }
 
 // Global Custom Modals (Alert/Prompt replacement)
@@ -427,11 +446,8 @@ const DB = {
     // map is { modelId: boolean }
     DB.state.modelAvailability = map;
     DB._notify();
-    // remote: we store as array or object? Plan says object in new schema
-    // Let's store as object: modelAvailability/modelId = true/false
-    // But for simplicity of migration let's just replace the whole node since it's small config
-    const list = Object.entries(map).map(([k, v]) => ({ id: k, available: v }));
-    await set(ref(db, `${REMOTE_PATH}/modelAvailability`), list);
+    // Save as object directly to avoid Firebase array conversion mess
+    await set(ref(db, `${REMOTE_PATH}/modelAvailability`), map);
   },
 
   getCurrentUser: () => {
@@ -523,10 +539,20 @@ const DB = {
 
       // Special handling
       onValue(ref(db, `${REMOTE_PATH}/modelAvailability`), (snap) => {
-        const d = snap.val();
-        DB.state.modelAvailability = Array.isArray(d)
-          ? Object.fromEntries(d.map(m => [m.id, !!m.available]))
-          : (d || {});
+        const d = snap.val() || {};
+        let finalMap = {};
+        if (Array.isArray(d)) {
+          d.forEach(m => { if (m && m.id) finalMap[m.id] = !!m.available; });
+        } else if (typeof d === 'object') {
+          // Check if it's the "corrupted" indexed object form: { "0": {id, available} }
+          const keys = Object.keys(d);
+          if (keys.length > 0 && typeof d[keys[0]] === 'object' && 'id' in d[keys[0]]) {
+            keys.forEach(k => { const m = d[k]; if (m && m.id) finalMap[m.id] = !!m.available; });
+          } else {
+            finalMap = d;
+          }
+        }
+        DB.state.modelAvailability = finalMap;
         DB._notify();
       });
 

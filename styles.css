@@ -1482,7 +1482,7 @@ img[alt="grok--v1"] {
 }
 
 .model-selector-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -1650,6 +1650,8 @@ img[alt="grok--v1"] {
 
 .model-option.disabled {
   opacity: 0.55;
+  pointer-events: none;
+  filter: grayscale(1);
   cursor: not-allowed;
 }
 
@@ -1699,8 +1701,8 @@ img[alt="grok--v1"] {
 
 .model-option-name {
   font-weight: 700;
-  font-size: 11px;
-  line-height: 1.15;
+  font-size: 10px;
+  line-height: 1.1;
   display: -webkit-box;
   line-clamp: 2;
   -webkit-line-clamp: 2;
@@ -2093,62 +2095,92 @@ img[alt="grok--v1"] {
   opacity: 0.6;
 }
 
+.md-h1 {
+  font-size: 1.8em;
+  font-weight: 700;
+  margin: 20px 0 10px;
+  color: var(--text);
+  font-family: 'Unbounded', sans-serif;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
 .md-h2 {
   font-size: 1.5em;
   font-weight: 700;
-  margin: 16px 0 8px;
+  margin: 18px 0 8px;
   color: var(--text);
+  font-family: 'Unbounded', sans-serif;
 }
 
 .md-h3 {
-  font-size: 1.25em;
+  font-size: 1.3em;
   font-weight: 600;
-  margin: 14px 0 6px;
+  margin: 16px 0 6px;
   color: var(--text);
+  font-family: 'Unbounded', sans-serif;
 }
 
 .md-h4 {
-  font-size: 1.1em;
+  font-size: 1.15em;
   font-weight: 600;
-  margin: 12px 0 4px;
+  margin: 14px 0 4px;
   color: var(--text);
 }
 
+.md-h5 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 12px 0 4px;
+  color: var(--text-secondary);
+}
+
+.md-h6 {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 10px 0 4px;
+  color: var(--text-muted);
+}
+
 .md-quote {
-  border-left: 3px solid var(--primary);
-  padding-left: 12px;
-  margin: 10px 0;
+  border-left: 4px solid var(--primary);
+  padding: 8px 16px;
+  margin: 12px 0;
+  background: rgba(142, 67, 255, 0.05);
+  border-radius: 0 8px 8px 0;
   color: var(--text-secondary);
   font-style: italic;
 }
 
 .md-hr {
   border: none;
-  height: 1px;
+  height: 2px;
   background: var(--border);
-  margin: 16px 0;
+  margin: 24px 0;
+  opacity: 0.5;
 }
 
 .md-link {
   color: #c6a6ff;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(198, 166, 255, 0.4);
+  transition: all 0.2s;
 }
 
 .md-link:hover {
   color: #d4baff;
+  border-bottom-color: #d4baff;
 }
 
 .md-ul,
 .md-ol {
-  margin: 10px 0;
-  padding-left: 24px;
+  margin: 12px 0;
+  padding-left: 28px;
 }
 
-.md-li,
-.md-oli {
-  margin: 4px 0;
-  line-height: 1.5;
+.md-li {
+  margin: 6px 0;
+  line-height: 1.6;
 }
 
 .md-ul {
@@ -2157,6 +2189,40 @@ img[alt="grok--v1"] {
 
 .md-ol {
   list-style-type: decimal;
+}
+
+/* Table Styles */
+.message-text table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.message-text th {
+  background: rgba(142, 67, 255, 0.15);
+  color: var(--text);
+  font-weight: 600;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+.message-text td {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.message-text tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.message-text tr:hover {
+  background: rgba(142, 67, 255, 0.05);
 }
 
 /* ============ INPUT AREA ============ */
@@ -3787,55 +3853,4 @@ input:checked+.toggle-slider:before {
 
 .message-body {
   position: relative;
-}
-
-/* Missing Model Option Styles */
-.model-option {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.model-option:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(142, 67, 255, 0.3);
-}
-
-.model-option.active {
-  background: rgba(142, 67, 255, 0.15);
-  border-color: var(--primary);
-}
-
-.model-option-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.model-option-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.model-option-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--text-secondary);
-}
-
-.model-option-name {
-  font-family: 'Unbounded', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.model-option.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-  filter: grayscale(1);
-  background: rgba(0, 0, 0, 0.2);
 }
