@@ -37,6 +37,10 @@ window.initAdmin = () => {
     if (window.__adminInited) return;
     window.__adminInited = true;
 
+    // Mask UI immediately
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.2s';
+
     const local = DB.getCurrentUser();
     if (!local) {
         location.href = 'chat.html';
@@ -60,6 +64,11 @@ window.initAdmin = () => {
 
         if (fresh) DB.setCurrentUser(fresh); // Sync local storage
         ADMIN.set(true);
+
+        // Reveal UI
+        requestAnimationFrame(() => {
+            document.body.style.opacity = '1';
+        });
 
         // Render UI
         renderAdminStats();
@@ -148,6 +157,14 @@ window.toggleUserPlan = (id) => {
 window.toggleUserAdmin = (id) => {
     if (!ADMIN.get()) return;
     const targetId = String(id);
+    const local = DB.getCurrentUser();
+
+    // Self-lockout protection
+    if (local && String(local.id) === targetId) {
+        showToast('Нельзя снять права у самого себя', 'error');
+        return;
+    }
+
     const u = DB.getUsers().find(x => String(x.id ?? '') === targetId);
     if (!u) return;
     const next = !u.isAdmin;
