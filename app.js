@@ -1758,7 +1758,7 @@ function renderMessages(force = false) {
     // Check for Image Edit eligibility
     let editBtnHtml = '';
     if (!isUser && (m.model?.includes('nano') || attachHtml.includes('<img') || textHtml.includes('![') || textHtml.includes('<img'))) {
-      editBtnHtml = `<button class="edit-image-btn" onclick="window.startEditImage('${m.id}')" title="Изменить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>`;
+      editBtnHtml = `<button id="edit-btn-${m.id}" class="edit-image-btn" onclick="window.startEditImage('${m.id}')" title="Изменить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>`;
     }
 
     // Tools Metadata Badge
@@ -1881,9 +1881,26 @@ window.sendMessage = async () => {
 
   // create chat on first message
   if (!currentChatId) {
+    // Get default mode for this model
+    const adminCfg = DB.getAdminConfig();
+    const modelModes = adminCfg?.modelModes || {};
+    const defaultMode = modelModes[currentModel] || 'auto'; // 'auto', 'manual', 'admin'
+    const isAion = defaultMode === 'auto';
+
     const id = nowId();
     const title = content ? content.slice(0, 32) : (attachedFiles?.[0]?.name || 'Новый чат');
-    const chat = { id, userId: user.id, name: title, model: currentModel, aion: true, createdAt: Date.now(), updatedAt: Date.now() };
+
+    // Create Chat
+    const chat = {
+      id,
+      userId: user.id,
+      name: title,
+      model: currentModel,
+      aion: isAion,
+      mode: defaultMode,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
     await DB.saveChat(chat);
     currentChatId = id;
     $('#welcome-screen')?.classList.add('hidden');
@@ -2393,6 +2410,35 @@ window.selectModel = (id) => {
 document.addEventListener('click', () => {
   $('#model-dropdown')?.classList.remove('active');
 });
+
+window.startEditImage = (msgId) => {
+  // Set global reference
+  window.__editingRefId = msgId;
+
+  // Select Image Tool
+  window.toggleUserTool('image');
+
+  // Highlight the edit button
+  const btn = document.getElementById(`edit-btn-${msgId}`);
+  if (btn) {
+    // Remove other highlights?
+    $$('.edit-image-btn').forEach(b => b.classList.remove('active-blue'));
+    btn.classList.add('active-blue');
+  }
+
+  // Focus input
+  $('#message-input')?.focus();
+};
+
+window.scrollToMsg = (msgId) => {
+  const el = document.getElementById(`msg-${msgId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('highlight-yellow');
+    void el.offsetWidth; // trigger reflow
+    el.classList.add('highlight-yellow');
+  }
+};
 
 // ==================== TICKETS (USER) ====================
 let currentTicketId = null;

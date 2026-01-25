@@ -88,7 +88,14 @@ window.initAdmin = () => {
             const last = localStorage.getItem('mirra_last_refresh_ts');
             if (!last || Number(last) < cfg.forceRefresh) {
                 localStorage.setItem('mirra_last_refresh_ts', cfg.forceRefresh);
-                location.reload();
+
+                // Show overlay
+                const overlay = document.getElementById('refresh-overlay');
+                if (overlay) overlay.classList.add('active');
+
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             }
         }
 
@@ -315,10 +322,16 @@ function renderAdminModels() {
     const avail = DB.getModelAvailability();
     // We need 'all' models list. window.MODELS is global from app.js
     const all = Object.values(window.MODELS || {});
-    const models = [...all].sort((a, b) => a.id.localeCompare(b.id));
+    const models = [...all].sort((a, b) => a.id.localeCompare(b.id)); // Fix sort to use ID or Name consistently? Name is better but ID was used.
+
+    // Get default modes
+    const adminCfg = DB.getAdminConfig();
+    const modes = adminCfg?.modelModes || {};
 
     wrap.innerHTML = models.map(m => {
         const on = (m.id in avail) ? avail[m.id] : true;
+        const mode = modes[m.id] || 'auto'; // default 'auto'
+
         return `
       <div class="model-admin-row">
         <div class="model-admin-left">
@@ -328,6 +341,13 @@ function renderAdminModels() {
             <div class="model-admin-provider">${escapeHTML(m.provider)}</div>
           </div>
         </div>
+        
+        <div style="display:flex;gap:4px;margin-right:12px;">
+           <button class="btn small ${mode === 'manual' ? 'primary' : 'secondary'}" style="padding:4px 8px;font-size:10px;" onclick="window.toggleModelDefaultMode('${m.id}', 'manual')">Manual</button>
+           <button class="btn small ${mode === 'auto' ? 'primary' : 'secondary'}" style="padding:4px 8px;font-size:10px;" onclick="window.toggleModelDefaultMode('${m.id}', 'auto')">Auto</button>
+           <button class="btn small ${mode === 'admin' ? 'primary' : 'secondary'}" style="padding:4px 8px;font-size:10px;" onclick="window.toggleModelDefaultMode('${m.id}', 'admin')">Admin</button>
+        </div>
+
         <button class="btn small ${on ? 'success' : 'secondary'}" onclick="window.toggleModelAvailability('${m.id}')">${on ? 'Доступна' : 'Недоступна'}</button>
       </div>
     `;
@@ -340,6 +360,16 @@ window.toggleModelAvailability = (id) => {
     const cur = (id in map) ? !!map[id] : true;
     map[id] = !cur;
     DB.setModelAvailability(map);
+    // render will be triggered by DB sub
+};
+
+window.toggleModelDefaultMode = async (id, mode) => {
+    if (!ADMIN.get()) return;
+    const cfg = DB.getAdminConfig() || {};
+    const modes = { ...(cfg.modelModes || {}) };
+    modes[id] = mode;
+    await DB.saveAdminConfig({ ...cfg, modelModes: modes });
+    // render triggered by DB
 };
 
 // ---- Admin Tickets ----
