@@ -135,9 +135,9 @@ function renderUsersTable() {
       <td>
         <div class="action-buttons">
           <button class="btn small primary" onclick="window.openGodMode('${u.id}')">God Mode</button>
-          <button class="btn small secondary" onclick="window.openEditUserModal('${u.id}')">Изменить</button>
           <button class="btn small secondary" onclick="window.toggleUserPlan('${u.id}')">${(u.plan || 'free') === 'pro' ? 'Снять PRO' : 'Выдать PRO'}</button>
           <button class="btn small secondary" onclick="window.toggleUserAdmin('${u.id}')">${u.isAdmin ? 'Снять Admin' : 'Выдать Admin'}</button>
+          <button class="btn small secondary" onclick="window.openEditUserModal('${u.id}')">Изменить данные</button>
           <button class="btn small danger" onclick="window.deleteUser('${u.id}')">Удалить</button>
         </div>
       </td>

@@ -253,8 +253,21 @@ const DB = {
   getAdminConfig: () => (DB.state.adminConfig && typeof DB.state.adminConfig === 'object') ? DB.state.adminConfig : null,
   getModelAvailability: () => DB.state.modelAvailability || {},
 
-  // setUsers: (v) => { ... }, -- DEPRECATED for manual set
-  // setChats: (v) => { ... }, -- DEPRECATED
+  async setUsers(list) {
+    DB.state.users = list;
+    DB._notify();
+    await set(ref(db, `${REMOTE_PATH}/users`), Object.fromEntries(list.map(u => [u.id, u])));
+  },
+  async setChats(list) {
+    DB.state.chats = list;
+    DB._notify();
+    await set(ref(db, `${REMOTE_PATH}/chats`), Object.fromEntries(list.map(c => [c.id, c])));
+  },
+  async setMessages(list) {
+    DB.state.messages = list;
+    DB._notify();
+    await set(ref(db, `${REMOTE_PATH}/messages`), Object.fromEntries(list.map(m => [m.id, m])));
+  },
 
   // Granular Actions
   async saveUser(u) {
@@ -591,14 +604,15 @@ window.openChangeNickModal = () => openModal('change-nick-modal');
 window.openChangePasswordModal = () => openModal('change-password-modal');
 window.openDeleteAccountModal = () => openModal('delete-account-modal');
 
-window.saveVisibleName = () => {
+window.saveVisibleName = async () => {
   const user = DB.getCurrentUser();
   if (!user) return;
   const val = ($('#new-visible-name')?.value || '').trim();
-  const users = DB.getUsers().map(u => u.id === user.id ? ({ ...u, visibleName: val }) : u);
-  DB.setUsers(users);
-  const fresh = users.find(u => u.id === user.id);
-  DB.setCurrentUser(fresh);
+
+  const updatedUser = { ...user, visibleName: val };
+  await DB.saveUser(updatedUser);
+  DB.setCurrentUser(updatedUser);
+
   showToast('Сохранено', 'success');
   closeModal('change-nick-modal');
 };
