@@ -1441,25 +1441,103 @@ window.forceRefreshAllUsers = async () => {
     closeModal('admin-settings-modal');
 };
 
-// Hook to populate slider when modal opens
-const _origOpenSettings = window.openAdminSettings || (() => { }); // Check if openAdminSettings exists or just hook generic modal open
-// Better: expose a function or just adding a click handler to the button that opens it.
-// Assuming "openModal('admin-settings-modal')" is called from HTML. 
-// We'll add a global event or MutationObserver if needed, but for now let's overwrite the button onclick in DOM or just add a helper.
-// Actually, let's just add an init check.
-document.addEventListener('click', (e) => {
-    if (e.target.closest('[onclick*="admin-settings-modal"]')) {
-        setTimeout(() => {
-            const cfg = DB.getAdminConfig() || {};
-            const sl = document.getElementById('admin-typewriter-speed');
-            const val = document.getElementById('speed-value');
-            if (sl) {
-                sl.value = cfg.typewriterSpeed || 10;
-                if (val) val.textContent = (cfg.typewriterSpeed || 10) + 'ms';
-            }
-        }, 50);
+// Explicitly expose openAdminSettings to handle population
+// Explicitly expose openAdminSettings to handle population
+window.openAdminSettings = () => {
+    openModal('admin-settings-modal');
+
+    // Populate values
+    const cfg = DB.getAdminConfig() || {};
+    const speedInput = document.getElementById('admin-typewriter-speed');
+    const speedValue = document.getElementById('speed-value');
+
+    if (speedInput) {
+        speedInput.value = (cfg.typewriterSpeed !== undefined) ? cfg.typewriterSpeed : 10;
+        if (speedValue) speedValue.textContent = speedInput.value + 'ms';
+
+        // Add live listener if not already there (idempotent because oninput replaces handler)
+        speedInput.oninput = (e) => {
+            if (speedValue) speedValue.textContent = e.target.value + 'ms';
+        };
     }
-});
+};
+
+
+
+// ==================== MODELS MANAGEMENT ====================
+window.openAdminModels = () => {
+    openModal('admin-models-modal');
+    renderAdminModels();
+};
+
+function renderAdminModels() {
+    const el = document.getElementById('admin-models-list');
+    if (!el) return;
+
+    // Config: { models: { 'model-id': { disabled: bool, defaultMode: 'manual'|'auto'|'admin' } } }
+    const cfg = DB.getAdminConfig() || {};
+    const settings = cfg.models || {};
+    const models = window.MODELS || {};
+
+    const list = Object.values(models).sort((a, b) => a.name.localeCompare(b.name));
+
+    el.innerHTML = list.map(m => {
+        const s = settings[m.id] || {};
+        const disabled = !!s.disabled;
+        const mode = s.defaultMode || 'auto';
+
+        let modeLabel = 'Авто';
+        let modeCls = 'primary';
+        if (mode === 'manual') { modeLabel = 'Ручной'; modeCls = 'secondary'; }
+        if (mode === 'admin') { modeLabel = 'Админ'; modeCls = 'danger'; }
+
+        return `
+        <div class="admin-ticket-row" style="display:flex;justify-content:space-between;align-items:center;">
+           <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;">${window.ICONS[m.icon] || '🤖'}</span>
+              <div>
+                 <div style="font-weight:600;color:${disabled ? 'var(--text-muted)' : 'white'}">${escapeHTML(m.name)}</div>
+                 <div style="font-size:11px;color:rgba(255,255,255,0.4);">${m.id}</div>
+              </div>
+           </div>
+           
+           <div style="display:flex;gap:8px;">
+              <button class="btn small ${modeCls}" onclick="window.cycleModelMode('${m.id}')" title="Режим по умолчанию">
+                 ${modeLabel}
+              </button>
+              
+              <button class="btn small ${disabled ? 'secondary' : 'success'}" onclick="window.toggleModelAvailability('${m.id}')">
+                 ${disabled ? 'Выкл' : 'Вкл'}
+              </button>
+           </div>
+        </div>
+        `;
+    }).join('');
+}
+
+window.toggleModelAvailability = (id) => {
+    const cfg = DB.getAdminConfig() || {};
+    const models = cfg.models || {};
+    const current = models[id] || {};
+    models[id] = { ...current, disabled: !current.disabled };
+    DB.saveAdminConfig({ ...cfg, models });
+    renderAdminModels();
+    showToast('Статус модели обновлен', 'success');
+};
+
+window.cycleModelMode = (id) => {
+    const cfg = DB.getAdminConfig() || {};
+    const models = cfg.models || {};
+    const current = models[id] || {};
+
+    const modes = ['auto', 'manual', 'admin'];
+    const idx = modes.indexOf(current.defaultMode || 'auto');
+    const next = modes[(idx + 1) % modes.length];
+
+    models[id] = { ...current, defaultMode: next };
+    DB.saveAdminConfig({ ...cfg, models });
+    renderAdminModels();
+};
 
 window.startGodTool = (tool, extraMeta = {}) => {
     if (!godChatId || !godUserId) return showToast('Нет чата', 'error');

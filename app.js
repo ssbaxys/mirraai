@@ -88,19 +88,46 @@ const MODELS = {
 
 // ==================== HELPERS ====================
 window.deleteChatUser = async (e, chatId) => {
+  console.log('deleteChatUser called', chatId);
   e.stopPropagation();
-  if (!await uiConfirm('Удалить этот чат безвозвратно?')) return;
+  try {
+    if (!window.uiConfirm) {
+      if (!confirm('Удалить этот чат безвозвратно?')) return;
+    } else {
+      if (!await window.uiConfirm('Удалить этот чат безвозвратно?')) return;
+    }
 
-  // Check ownership
-  const chat = DB.getChats().find(c => c.id === chatId);
-  const user = DB.getCurrentUser();
-  if (!chat || !user || chat.userId !== user.id) {
-    showToast('Ошибка доступа', 'error');
-    return;
+    console.log('Confirmed deletion');
+
+    // Check ownership
+    const chat = DB.getChats().find(c => c.id === chatId);
+    const user = DB.getCurrentUser();
+
+    if (!chat || !user || chat.userId !== user.id) {
+      showToast('Ошибка доступа', 'error');
+      return;
+    }
+
+    await DB.deleteChat(chatId);
+    console.log('Chat deleted in DB');
+
+    // If deleted chat was active, load another?
+    if (currentChatId === chatId) {
+      const others = DB.getChats().filter(c => c.userId === user.id && c.id !== chatId);
+      if (others.length) window.loadChat(others[0].id);
+      else {
+        // New chat state
+        currentChatId = null;
+        renderMessages();
+      }
+    }
+
+    renderChatList(); // Ensure list updates
+    showToast('Чат удален', 'success');
+  } catch (err) {
+    console.error('Delete error', err);
+    showToast('Ошибка удаления: ' + err.message, 'error');
   }
-
-  await DB.deleteChat(chatId);
-  showToast('Чат удален', 'success');
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -2271,30 +2298,85 @@ function renderModelSelector() {
   const el = $('#model-selector');
   if (!el) return;
   const m = getSafeModel(currentModel);
-  const available = getModelAvailability(m.id);
+  const user = DB.getCurrentUser();
+  const plan = user?.plan || 'free';
+  const adminCfg = DB.getAdminConfig();
 
-  let badgeClass;
-  let badgeLabel;
-  if (!available) {
-    badgeClass = 'unavailable';
-    badgeLabel = 'Недоступно';
-  } else if (m.isPro) {
-    badgeClass = 'pro';
-    badgeLabel = 'PRO';
-  } else {
-    badgeClass = 'free';
-    badgeLabel = 'FREE';
-  }
+  // Filter models
+  const keys = Object.keys(MODELS).filter(k => {
+    const mod = MODELS[k];
+    if (!getModelAvailability(k)) return false;
+    // Show locked pro models? Usually yes, to upsell.
+    return true;
+  });
 
   el.innerHTML = `
-    <div class="model-selector-icon">${ICONS[m.icon]}</div>
-    <div class="model-selector-name">${escapeHTML(m.name)}</div>
-    <div class="badge ${badgeClass}">${badgeLabel}</div>
-    <div class="model-selector-arrow"></div>
+    <div class="model-select-trigger" onclick="this.nextElementSibling.classList.toggle('active')">
+      <div class="model-selector-icon">${ICONS[m.icon]}</div>
+      <div class="model-selector-name">${escapeHTML(m.name)}</div>
+       ${m.isPro ? '<div class="badge pro">PRO</div>' : ''}
+      <div class="model-selector-arrow"></div>
+    </div>
+    <div class="model-dropdown">
+      ${keys.map(k => {
+    const mod = MODELS[k];
+    const locked = mod.isPro && plan !== 'pro';
+    return `
+        <div class="model-option ${k === currentModel ? 'active' : ''}" onclick="window.setModel('${k}')">
+          <span class="model-icon">${ICONS[mod.icon]}</span>
+          <span class="model-name">${escapeHTML(mod.name)}</span>
+          ${mod.type === 'image' ? '<span class="badge image">IMG</span>' : ''}
+          ${mod.isPro ? '<span class="badge pro">PRO</span>' : ''}
+          ${locked ? '<span style="margin-left:auto;font-size:10px;">🔒</span>' : ''}
+        </div>
+        `;
+  }).join('')}
+    </div>
   `;
 }
 
+window.setModel = (id) => {
+  const user = DB.getCurrentUser();
+  const plan = user?.plan || 'free';
+  const mod = MODELS[id];
+
+  if (mod.isPro && plan !== 'pro') {
+    showToast('Доступно только в PRO подписке', 'warning');
+    return;
+  }
+
+  currentModel = id;
+  const el = $('#model-selector .model-dropdown');
+  if (el) el.classList.remove('active');
+
+  // Apply Default Mode
+  const adminCfg = DB.getAdminConfig();
+  const s = adminCfg?.models?.[id];
+  const defMode = s?.defaultMode || 'auto';
+
+  if (currentChatId) {
+    const chat = DB.getChats().find(c => c.id === currentChatId);
+    if (chat) {
+      const updates = { model: id };
+      if (defMode === 'auto') { updates.aion = true; updates.mode = 'auto'; }
+      else if (defMode === 'manual') { updates.aion = false; updates.mode = 'manual'; }
+      else if (defMode === 'admin') { updates.aion = false; updates.mode = 'admin'; } // or custom logic
+
+      DB.saveChat({ ...chat, ...updates });
+    }
+  }
+
+  showToast(`Модель: ${MODELS[id].name}`, 'info');
+  renderModelSelector();
+  if (currentChatId) renderMessages();
+};
+
 function getModelAvailability(id) {
+  // Check Admin Config first
+  const adminCfg = DB.getAdminConfig();
+  if (adminCfg?.models?.[id]?.disabled) return false;
+
+  // Legacy or other checks
   const map = DB.getModelAvailability();
   if (map && typeof map === 'object' && id in map) return !!map[id];
   return true;
