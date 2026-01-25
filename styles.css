@@ -3788,3 +3788,53 @@ input:checked+.toggle-slider:before {
 .message-body {
   position: relative;
 }
+
+/* Missing Model Option Styles */
+.model-option {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.model-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(142, 67, 255, 0.3);
+}
+
+.model-option.active {
+  background: rgba(142, 67, 255, 0.15);
+  border-color: var(--primary);
+}
+
+.model-option-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.model-option-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.model-option-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary);
+}
+
+.model-option-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.model-option.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(1);
+  background: rgba(0, 0, 0, 0.2);
+}
