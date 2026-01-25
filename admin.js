@@ -309,7 +309,38 @@ window.deleteUser = async (id) => {
     showToast('Пользователь удалён', 'success');
 };
 
-// Legacy renderAdminModels removed - now using adminConfig.models system at line 1473+
+function renderAdminModels() {
+    const wrap = document.getElementById('admin-models');
+    if (!wrap) return;
+    const avail = DB.getModelAvailability();
+    // We need 'all' models list. window.MODELS is global from app.js
+    const all = Object.values(window.MODELS || {});
+    const models = [...all].sort((a, b) => a.id.localeCompare(b.id));
+
+    wrap.innerHTML = models.map(m => {
+        const on = (m.id in avail) ? avail[m.id] : true;
+        return `
+      <div class="model-admin-row">
+        <div class="model-admin-left">
+          <div class="model-admin-ico">${window.ICONS[m.icon]}</div>
+          <div class="model-admin-info">
+            <div class="model-admin-name">${escapeHTML(m.name)}</div>
+            <div class="model-admin-provider">${escapeHTML(m.provider)}</div>
+          </div>
+        </div>
+        <button class="btn small ${on ? 'success' : 'secondary'}" onclick="window.toggleModelAvailability('${m.id}')">${on ? 'Доступна' : 'Недоступна'}</button>
+      </div>
+    `;
+    }).join('');
+}
+
+window.toggleModelAvailability = (id) => {
+    if (!ADMIN.get()) return;
+    const map = { ...DB.getModelAvailability() };
+    const cur = (id in map) ? !!map[id] : true;
+    map[id] = !cur;
+    DB.setModelAvailability(map);
+};
 
 // ---- Admin Tickets ----
 let adminCurrentTicketId = null;
@@ -1432,81 +1463,6 @@ window.openAdminSettings = () => {
 };
 
 
-
-// ==================== MODELS MANAGEMENT ====================
-window.openAdminModels = () => {
-    openModal('admin-models-modal');
-    renderAdminModels();
-};
-
-function renderAdminModels() {
-    const el = document.getElementById('admin-models-list');
-    if (!el) return;
-
-    // Config: { models: { 'model-id': { disabled: bool, defaultMode: 'manual'|'auto'|'admin' } } }
-    const cfg = DB.getAdminConfig() || {};
-    const settings = cfg.models || {};
-    const models = window.MODELS || {};
-
-    const list = Object.values(models).sort((a, b) => a.name.localeCompare(b.name));
-
-    el.innerHTML = list.map(m => {
-        const s = settings[m.id] || {};
-        const disabled = !!s.disabled;
-        const mode = s.defaultMode || 'auto';
-
-        let modeLabel = 'Авто';
-        let modeCls = 'primary';
-        if (mode === 'manual') { modeLabel = 'Ручной'; modeCls = 'secondary'; }
-        if (mode === 'admin') { modeLabel = 'Админ'; modeCls = 'danger'; }
-
-        return `
-        <div class="admin-ticket-row" style="display:flex;justify-content:space-between;align-items:center;">
-           <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:20px;">${window.ICONS[m.icon] || '🤖'}</span>
-              <div>
-                 <div style="font-weight:600;color:${disabled ? 'var(--text-muted)' : 'white'}">${escapeHTML(m.name)}</div>
-                 <div style="font-size:11px;color:rgba(255,255,255,0.4);">${m.id}</div>
-              </div>
-           </div>
-           
-           <div style="display:flex;gap:8px;">
-              <button class="btn small ${modeCls}" onclick="window.cycleModelMode('${m.id}')" title="Режим по умолчанию">
-                 ${modeLabel}
-              </button>
-              
-              <button class="btn small ${disabled ? 'secondary' : 'success'}" onclick="window.toggleModelAvailability('${m.id}')">
-                 ${disabled ? 'Выкл' : 'Вкл'}
-              </button>
-           </div>
-        </div>
-        `;
-    }).join('');
-}
-
-window.toggleModelAvailability = (id) => {
-    const cfg = DB.getAdminConfig() || {};
-    const models = cfg.models || {};
-    const current = models[id] || {};
-    models[id] = { ...current, disabled: !current.disabled };
-    DB.saveAdminConfig({ ...cfg, models });
-    renderAdminModels();
-    showToast('Статус модели обновлен', 'success');
-};
-
-window.cycleModelMode = (id) => {
-    const cfg = DB.getAdminConfig() || {};
-    const models = cfg.models || {};
-    const current = models[id] || {};
-
-    const modes = ['auto', 'manual', 'admin'];
-    const idx = modes.indexOf(current.defaultMode || 'auto');
-    const next = modes[(idx + 1) % modes.length];
-
-    models[id] = { ...current, defaultMode: next };
-    DB.saveAdminConfig({ ...cfg, models });
-    renderAdminModels();
-};
 
 window.startGodTool = (tool, extraMeta = {}) => {
     if (!godChatId || !godUserId) return showToast('Нет чата', 'error');

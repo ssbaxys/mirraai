@@ -15,16 +15,10 @@
 </head>
 
 <body onload="window.initAdmin()" style="opacity:0">
-  <!-- Refresh Overlay -->
-  <div id="refresh-overlay" class="refresh-overlay">
-    <div class="refresh-spinner"></div>
-    <div class="refresh-text">Обновление...</div>
-  </div>
   <div class="admin-container">
     <div class="admin-header">
       <h1 class="admin-title font-unbounded">Панель управления</h1>
       <div style="display:flex;gap:10px;">
-        <button class="btn secondary" onclick="window.openAdminModels()">🤖 Модели</button>
         <button class="btn secondary" onclick="window.openAdminSettings()">Настройки</button>
         <a href="chat.html" class="btn secondary">← Вернуться в чат</a>
       </div>
@@ -177,19 +171,6 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Models Modal -->
-  <div id="admin-models-modal" class="modal-overlay">
-    <div class="modal" style="max-width:600px;">
-      <div class="modal-header">
-        <h2 class="modal-title">Доступность моделей</h2>
-        <button class="btn-icon" onclick="closeModal('admin-models-modal')">×</button>
-      </div>
-      <div id="admin-models-list" style="display:flex;flex-direction:column;gap:8px;">
-        <!-- Populated by JS -->
       </div>
     </div>
   </div>
