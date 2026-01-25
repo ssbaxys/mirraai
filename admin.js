@@ -670,6 +670,15 @@ function renderGodMessages() {
         let attachHtml = '';
         const files = Array.isArray(m.files) ? m.files : (m.file ? [m.file] : []);
         const meta = m.meta || {};
+
+        // Loading/Waiting status
+        if (meta.loading) {
+            return `
+                <div class="god-message ai" style="opacity:0.8;background:rgba(142,67,255,0.05);">
+                    <div class="status-shimmer">Пользователь ожидает ответа...</div>
+                </div>`;
+        }
+
         const toolIncludesImage = meta.tool === 'image' && (meta.state === 'pending' || meta.state === 'done');
         // Check if message has music tool - if so, skip audio files as they're rendered by the tool card
         const hasMusicTool = meta.multiTools?.some(t => t.type === 'music' && t.state === 'done') || (meta.tool === 'music' && meta.state === 'done');
@@ -683,13 +692,33 @@ function renderGodMessages() {
                     : window.renderFileBlock(f);
             }).join('');
         }
+        // Tools Metadata Badge (Generation/Editing)
+        let toolsMetaHtml = '';
+        if (meta.usedTools) {
+            const badges = meta.usedTools.map(t => {
+                let label = t;
+                let onclick = '';
+                let cls = 'tool-usage-badge';
+                if (t === 'generation') label = 'Генерация';
+                if (t === 'editing') {
+                    label = 'Изменение';
+                    if (meta.refId) {
+                        onclick = `onclick="window.scrollToMsg('${meta.refId}')"`;
+                        cls += ' clickable';
+                    }
+                }
+                return `<span class="${cls}" ${onclick}>${label}</span>`;
+            }).join(' ');
+            if (badges) toolsMetaHtml = `<div class="msg-tools-meta" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;">${badges}</div>`;
+        }
+
         return `
-            <div class="god-message ${isUser ? 'user' : 'ai'}">
+            <div id="msg-${m.id}" class="god-message ${isUser ? 'user' : 'ai'}">
                 <div class="god-message-header">
                     <span class="god-message-role">${header}</span>
                     <button class="god-msg-delete" onclick="window.deleteGodMessage('${m.id}')">×</button>
                 </div>
-                ${text}${toolLabel}${attachHtml}
+                ${text}${toolLabel}${attachHtml}${toolsMetaHtml}
             </div>`;
     }).join('');
 
@@ -1561,5 +1590,15 @@ window.saveChatSystemPrompt = async () => {
         await DB.saveChat({ ...chat, systemPrompt: prompt });
         showToast('Инструкции сохранены', 'success');
         closeModal('chat-settings-modal');
+    }
+};
+
+window.scrollToMsg = (msgId) => {
+    const el = document.getElementById(`msg-${msgId}`);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.remove('highlight-yellow');
+        void el.offsetWidth;
+        el.classList.add('highlight-yellow');
     }
 };

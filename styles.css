@@ -3854,3 +3854,54 @@ input:checked+.toggle-slider:before {
 .message-body {
   position: relative;
 }
+
+/* Shimmer State for Loading... / User waiting... */
+.status-shimmer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-secondary);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      rgba(255, 255, 255, 0.05) 100%);
+  background-size: 400px 400px;
+  background-position: var(--shx, 0) var(--shy, 0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  user-select: none;
+  pointer-events: none;
+}
+
+.shimmer-live {
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      rgba(255, 255, 255, 0.05) 100%);
+  background-size: 400px 400px;
+  background-position: var(--shx, 0) var(--shy, 0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+@keyframes highlightYellow {
+  0% {
+    background-color: rgba(244, 211, 94, 0.4);
+    box-shadow: 0 0 20px rgba(244, 211, 94, 0.3);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.highlight-yellow {
+  animation: highlightYellow 2s ease-out forwards;
+}

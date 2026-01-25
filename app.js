@@ -1655,7 +1655,7 @@ function __shimmerTick(ts) {
 function observeShimmers(rootEl) {
   __ensureShimmerObserver();
   if (!rootEl) return;
-  const els = rootEl.querySelectorAll?.('.shimmer-live');
+  const els = rootEl.querySelectorAll?.('.shimmer-live, .status-shimmer');
   els?.forEach?.((el) => {
     if (__shimmerObserved.has(el)) return;
     __shimmerObserved.add(el);
@@ -1760,8 +1760,14 @@ function renderMessages(force = false) {
     }
 
     const toolHtml = renderToolCard(m);
-    const content = String(m.content || '').trim();
-    const textHtml = toolHtml ? toolHtml : (content ? `<div class="message-text">${parseMarkdown(content)}</div>` : '');
+    let content = String(m.content || '').trim();
+
+    // Loading State Shimmer for Users
+    if (m.meta?.loading) {
+      content = '<div class="status-shimmer">Загрузка...</div>';
+    }
+
+    const textHtml = toolHtml ? toolHtml : (content ? `<div class="message-text">${m.meta?.loading ? content : parseMarkdown(content)}</div>` : '');
 
     let attachHtml = '';
     const files = Array.isArray(m.files) ? m.files : (m.file ? [m.file] : []);
@@ -1786,11 +1792,12 @@ function renderMessages(force = false) {
 
     // Check for Image Edit eligibility
     let editBtnHtml = '';
-    if (!isUser && (m.model?.includes('nano') || attachHtml.includes('<img') || textHtml.includes('![') || textHtml.includes('<img'))) {
+    const hasImage = attachHtml.includes('<img') || textHtml.includes('![') || textHtml.includes('<img');
+    if (!isUser && hasImage) {
       editBtnHtml = `
         <div class="edit-image-btn-wrap">
           <button id="edit-btn-${m.id}" class="edit-image-btn" onclick="window.startEditImage('${m.id}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width:16px;height:16px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
             <span>Изменить</span>
           </button>
         </div>
@@ -2015,9 +2022,20 @@ window.sendMessage = async () => {
   const chatNow = DB.getChats().find(c => c.id === currentChatId);
   const isAuto = (chatNow?.aion ?? true) === true;
 
-  // Always show "Stop/Waiting" button when user sends a message.
-  // For Auto: It's a real abortable generation.
-  // For Manual/Admin: It's "Waiting for reply... Click to cancel".
+  // Save a stylized "Loading..." placeholder in DB so it shows for user AND admin
+  const loadingMsgId = 'loading-' + nowId();
+  const loadingMsg = {
+    id: loadingMsgId,
+    chatId: currentChatId,
+    userId: user.id,
+    role: 'assistant',
+    content: '[loading]',
+    meta: { loading: true },
+    createdAt: Date.now() + 1
+  };
+  await DB.saveMessage(loadingMsg);
+  window.__currentLoadingMsgId = loadingMsgId;
+
   updateSendButtonState(true);
 
   if (isAuto) {
@@ -2082,7 +2100,13 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
 
   if (!isMistralFamily) {
     // Mock for others
-    const timerId = setTimeout(() => {
+    const timerId = setTimeout(async () => {
+      // Cleanup loading placeholder
+      if (window.__currentLoadingMsgId) {
+        await DB.deleteMessage(window.__currentLoadingMsgId);
+        window.__currentLoadingMsgId = null;
+      }
+
       const ai = { id: nowId(), chatId, userId: user.id, role: 'assistant', content: `[Demo] Ответ от ${MODELS[modelId]?.name} (API не подключено)`, model: modelId, createdAt: Date.now() };
       DB.saveMessage(ai);
       renderMessages(true);
@@ -2131,6 +2155,12 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
       }),
       signal: window.currentAbortCtrl?.signal
     });
+
+    // Cleanup loading placeholder
+    if (window.__currentLoadingMsgId) {
+      await DB.deleteMessage(window.__currentLoadingMsgId);
+      window.__currentLoadingMsgId = null;
+    }
 
     // Image Placeholder Logic (Client Side)
     // If model name implies image, inject a temp message with "Generation..."
