@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Админ-панель — Mirra AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap"
+    rel="stylesheet">
   <link rel="preload" href="styles.css" as="style">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body onload="window.initAdmin()">
   <div class="admin-container">
     <div class="admin-header">
       <h1 class="admin-title font-unbounded">Панель управления</h1>
-      <a href="chat.html" class="btn secondary">← Вернуться в чат</a>
+      <div style="display:flex;gap:10px;">
+        <button class="btn secondary" onclick="window.openAdminSettings()">Настройки</button>
+        <a href="chat.html" class="btn secondary">← Вернуться в чат</a>
+      </div>
     </div>
 
     <div id="admin-stats" class="admin-stats"></div>
@@ -23,7 +30,13 @@
       <h2 class="admin-section-title">Пользователи</h2>
       <div class="users-table">
         <table>
-          <thead><tr><th>Никнейм</th><th>План</th><th>Действия</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Никнейм</th>
+              <th>План</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
           <tbody id="users-table-body"></tbody>
         </table>
       </div>
@@ -48,11 +61,14 @@
           <span class="god-sidebar-title" id="admin-ticket-user">Тикет</span>
           <button class="btn-icon" onclick="closeModal('admin-ticket-modal')">×</button>
         </div>
-        <div style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; gap:8px; flex-wrap:wrap;">
+        <div
+          style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; gap:8px; flex-wrap:wrap;">
           <button id="admin-ticket-close" class="btn small primary" onclick="window.adminCloseTicket()">Закрыть</button>
           <button id="admin-ticket-open" class="btn small secondary" onclick="window.adminOpenTicket()">Открыть</button>
-          <button id="admin-ticket-cancel" class="btn small secondary" onclick="window.cancelTicketAsAdmin()">Отменить</button>
-          <button id="admin-ticket-delete" class="btn small danger" onclick="window.adminDeleteTicket()">Удалить</button>
+          <button id="admin-ticket-cancel" class="btn small secondary"
+            onclick="window.cancelTicketAsAdmin()">Отменить</button>
+          <button id="admin-ticket-delete" class="btn small danger"
+            onclick="window.adminDeleteTicket()">Удалить</button>
         </div>
         <div style="padding:12px; color:rgba(255,255,255,0.6); font-size:12px;" id="admin-ticket-meta">—</div>
       </div>
@@ -65,12 +81,20 @@
             <div class="input-row">
               <textarea id="admin-ticket-input" placeholder="Ответ админа..." rows="1" maxlength="2000"></textarea>
               <div class="input-actions">
-                <input type="file" id="admin-ticket-file-input" hidden multiple onchange="window.handleAdminTicketFileSelect(event)">
-                <button class="btn-icon" onclick="document.getElementById('admin-ticket-file-input').click()" title="Прикрепить файл (до 3 МБ)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48"/></svg>
+                <input type="file" id="admin-ticket-file-input" hidden multiple
+                  onchange="window.handleAdminTicketFileSelect(event)">
+                <button class="btn-icon" onclick="document.getElementById('admin-ticket-file-input').click()"
+                  title="Прикрепить файл (до 3 МБ)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:20px;height:20px">
+                    <path
+                      d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
+                  </svg>
                 </button>
                 <button class="btn primary small" onclick="window.sendAdminTicketMessage()" title="Отправить">
-                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -101,13 +125,19 @@
         </div>
 
         <div id="god-chat-view" class="hidden">
-          <div id="god-mode-toggle" class="god-mode-toggle"></div>
+          <div class="god-mode-switch"
+            style="display:flex;gap:4px;background:rgba(255,255,255,0.05);padding:3px;border-radius:8px;">
+            <button id="mode-auto" class="mode-btn" onclick="window.setGodChatMode('auto')">Auto</button>
+            <button id="mode-manual" class="mode-btn" onclick="window.setGodChatMode('manual')">Manual</button>
+            <button id="mode-admin" class="mode-btn" onclick="window.setGodChatMode('admin')">Admin</button>
+          </div>
           <div class="god-tools">
-            <button id="god-tool-search" class="god-tool-btn" onclick="window.godToolSearch()">Поиск</button>
-            <button id="god-tool-coding" class="god-tool-btn" onclick="window.godToolCoding()">Кодинг</button>
-            <button id="god-tool-image" class="god-tool-btn" onclick="window.godToolImage()">Генерация изображения</button>
-            <button id="god-tool-music" class="god-tool-btn" onclick="window.godToolMusic()">Музыка</button>
-            <button id="god-tool-print" class="god-tool-btn" onclick="window.godToolPrint()">Печать</button>
+            <button id="god-tool-search" class="god-tool-btn" onclick="window.godToolToggle('search')">Поиск</button>
+            <button id="god-tool-coding" class="god-tool-btn" onclick="window.godToolToggle('coding')">Кодинг</button>
+            <button id="god-tool-thinking" class="god-tool-btn" onclick="window.godToolToggle('thinking')">🧠
+              Мысли</button>
+            <button id="god-tool-image" class="god-tool-btn" onclick="window.godToolToggle('image')">Фото</button>
+            <button id="god-tool-music" class="god-tool-btn" onclick="window.godToolToggle('music')">Музыка</button>
           </div>
           <div id="god-messages" class="god-messages"></div>
           <div class="god-input-area">
@@ -116,8 +146,13 @@
               <textarea id="god-input" placeholder="Ответ от лица ИИ..." rows="3" maxlength="2000"></textarea>
               <div class="god-input-actions">
                 <input type="file" id="god-file-input" hidden onchange="handleGodFileSelect(event)">
-                <button class="btn-icon" onclick="document.getElementById('god-file-input').click()" title="Прикрепить файл (до 3 МБ)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48"/></svg>
+                <button class="btn-icon" onclick="document.getElementById('god-file-input').click()"
+                  title="Прикрепить файл (до 3 МБ)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:20px;height:20px">
+                    <path
+                      d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
+                  </svg>
                 </button>
                 <button class="btn primary" onclick="sendGodMessage()">Отправить как ИИ</button>
               </div>
@@ -130,33 +165,58 @@
 
   <!-- Coding Tool Modal -->
   <div id="god-coding-modal" class="modal-overlay">
-    <div class="modal" style="max-width:680px;">
+    <div class="modal" style="max-width:800px;">
       <div class="modal-header">
-        <h2 class="modal-title">Кодинг</h2>
+        <h2 class="modal-title">Кодинг (Multifile)</h2>
         <button class="btn-icon" onclick="closeModal('god-coding-modal')">×</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="input-group"><input id="god-coding-title" class="input-field" type="text" placeholder="Название файла (например index.html)"></div>
-        <div class="input-group" style="height:260px;">
-          <textarea id="god-coding-content" class="input-field" style="height:260px;resize:none;" placeholder="Вставьте содержимое..." maxlength="20000"></textarea>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- List of added files -->
+        <div id="god-coding-files-list"
+          style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);">
+          <!-- Populated by JS -->
         </div>
-        <button class="btn primary" style="width:100%;" onclick="window.godCodingDone()">Готово</button>
+
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;">
+          <div class="input-group">
+            <input id="god-coding-title" class="input-field" type="text" placeholder="Название файла (main.js)">
+          </div>
+          <button class="btn secondary" onclick="window.addCodingFile()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Добавить
+          </button>
+        </div>
+
+        <div class="input-group" style="height:280px;">
+          <textarea id="god-coding-content" class="input-field" style="height:280px;resize:none;font-family:monospace;"
+            placeholder="Вставьте код..." maxlength="50000"></textarea>
+        </div>
+
+        <button class="btn primary" style="width:100%;" onclick="window.sendCodingMessage()">Отправить в чат</button>
       </div>
     </div>
   </div>
 
-  <!-- Music Tool Modal -->
-  <div id="god-music-modal" class="modal-overlay">
-    <div class="modal" style="max-width:520px;">
+  <!-- Thinking Modal -->
+  <div id="god-thinking-modal" class="modal-overlay">
+    <div class="modal" style="max-width:600px;">
       <div class="modal-header">
-        <h2 class="modal-title">Генерация музыки</h2>
-        <button class="btn-icon" onclick="closeModal('god-music-modal')">×</button>
+        <h2 class="modal-title">Мыслительный процесс</h2>
+        <button class="btn-icon" onclick="closeModal('god-thinking-modal')">×</button>
       </div>
-      <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:10px;">Загрузите аудиофайл (до 3 МБ). После нажатия «Готово» он появится у пользователя вместо индикатора генерации.</p>
-      <div id="god-music-modal-preview" style="margin-bottom:12px;"></div>
-      <input type="file" id="god-music-modal-input" accept="audio/*" style="display:none" onchange="window.handleGodToolMusicPick(event)">
-      <button class="btn secondary" style="width:100%;" onclick="document.getElementById('god-music-modal-input').click()">Выбрать аудио</button>
-      <button class="btn primary" style="width:100%;margin-top:10px;" onclick="window.godMusicDone()">Готово</button>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <p style="color:var(--text-muted);font-size:14px;">Опишите, о чем думал ИИ. Это отобразится у пользователя
+          раскрывающимся блоком.</p>
+        <textarea id="god-thinking-content" class="input-field" rows="6"
+          placeholder="Я проанализировал запрос..."></textarea>
+        <div style="display:flex;gap:10px;">
+          <button class="btn secondary" style="flex:1" onclick="window.godThinkingSave(false)">Только таймер</button>
+          <button class="btn primary" style="flex:1" onclick="window.godThinkingSave(true)">Сохранить мысли</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -167,11 +227,56 @@
         <h2 class="modal-title">Генерация изображения</h2>
         <button class="btn-icon" onclick="closeModal('god-image-modal')">×</button>
       </div>
-      <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:10px;">Загрузите изображение (до 3 МБ). После нажатия «Готово» оно появится у пользователя вместо плейсхолдера.</p>
+      <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:10px;">Загрузите изображение (до 3 МБ). После
+        нажатия «Готово» оно появится у пользователя вместо плейсхолдера.</p>
       <div id="god-image-modal-preview" style="margin-bottom:12px;"></div>
-      <input type="file" id="god-image-modal-input" accept="image/*" style="display:none" onchange="window.handleGodToolImagePick(event)">
-      <button class="btn secondary" style="width:100%;" onclick="document.getElementById('god-image-modal-input').click()">Выбрать фото</button>
-      <button class="btn primary" style="width:100%;margin-top:10px;" onclick="window.godImageDone()">Готово</button>
+      <input type="file" id="god-image-modal-input" accept="image/*" style="display:none"
+        onchange="window.handleGodToolImagePick(event)">
+      <div style="display:flex;gap:8px;">
+        <button class="btn secondary" style="flex:1"
+          onclick="document.getElementById('god-image-modal-input').click()">Выбрать файл</button>
+        <button class="btn primary" style="flex:1" onclick="window.godImageDone()">Вставить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Music Tool Modal -->
+  <div id="god-music-upload-modal" class="modal-overlay">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Загрузка музыки</h2>
+        <button class="btn-icon" onclick="closeModal('god-music-upload-modal')">×</button>
+      </div>
+      <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:10px;">Загрузите аудиофайл. Он появится у
+        пользователя как плеер.</p>
+      <input type="file" id="god-music-upload-input" accept="audio/*" style="display:none"
+        onchange="window.handleMusicUpload(event)">
+      <button class="btn primary" style="width:100%;"
+        onclick="document.getElementById('god-music-upload-input').click()">Выбрать аудиофайл</button>
+    </div>
+  </div>
+
+  <!-- Admin Settings Modal -->
+  <div id="admin-settings-modal" class="modal-overlay">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Настройки админки</h2>
+        <button class="btn-icon" onclick="closeModal('admin-settings-modal')">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div>
+          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;display:block;">Смена пароля
+            (остальное без изменений)</label>
+          <input id="new-admin-password" type="password" class="input-field" placeholder="Новый пароль">
+        </div>
+        <div>
+          <label style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;display:block;">Системный промпт
+            ИИ</label>
+          <textarea id="admin-system-prompt" class="input-field" rows="4"
+            placeholder="Ты — полезный ИИ-ассистент..."></textarea>
+        </div>
+        <button class="btn primary full" onclick="window.saveAdminSettings()">Сохранить настройки</button>
+      </div>
     </div>
   </div>
 
@@ -189,5 +294,7 @@
   <div id="toast" class="toast"></div>
 
   <script type="module" src="app.js"></script>
+  <script type="module" src="admin.js"></script>
 </body>
+
 </html>

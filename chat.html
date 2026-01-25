@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,35 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap"
+    rel="stylesheet">
 
   <link rel="preload" href="styles.css" as="style">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body onload="window.initChat()">
   <div class="chat-layout">
     <aside class="sidebar">
-      <div class="sidebar-header"><div class="sidebar-logo">Mirra AI</div></div>
+      <div class="sidebar-header">
+        <div class="sidebar-logo">Mirra AI</div>
+      </div>
       <div class="sidebar-controls">
         <button class="btn primary" onclick="window.createChat()" style="width:100%;">+ Новый диалог</button>
+
+        <div style="position:relative; margin-top:10px;">
+          <div class="sort-selector" onclick="window.toggleSortDropdown()">
+            <span id="current-sort-label">По дате</span>
+            <div class="sort-arrow"></div>
+          </div>
+          <div id="sort-dropdown" class="sort-dropdown" style="top:45px;left:0;right:0;">
+            <div class="sort-option" onclick="window.setSort('date')">По дате</div>
+            <div class="sort-option" onclick="window.setSort('alpha')">По алфавиту</div>
+            <div class="sort-option" onclick="window.setSort('count')">По сообщениям</div>
+          </div>
+        </div>
+
         <div id="chat-list" class="chat-list"></div>
       </div>
       <div class="profile-section">
@@ -34,44 +53,78 @@
     <main class="chat-main">
       <header class="chat-header">
         <div id="model-selector" class="model-selector" onclick="window.toggleModelDropdown(event)"></div>
-        <button class="btn secondary small admin-only" style="display:none" onclick="window.enterAdmin()">Админ-панель</button>
+        <button class="btn secondary small admin-only" style="display:none"
+          onclick="window.enterAdmin()">Админ-панель</button>
         <div id="model-dropdown" class="model-dropdown"></div>
       </header>
 
       <div class="messages-wrapper">
-        <div id="welcome-screen"><h2>Mirra AI</h2><p>Начните новый диалог</p></div>
-        <div id="messages-area" class="hidden"><div id="messages-container"></div></div>
+        <div id="welcome-screen">
+          <h2>Mirra AI</h2>
+          <p>Начните новый диалог</p>
+        </div>
+        <div id="messages-area" class="hidden">
+          <div id="messages-container"></div>
+        </div>
       </div>
 
       <div class="input-area">
-        <!-- Статус "ИИ думает" -->
+        <!-- Статус "ИИ думает" / Real-Time Print для пользователя -->
         <div id="thinking-status" class="thinking-status hidden"></div>
         <div class="input-wrapper">
-          <!-- Панель инструментов пользователя -->
-          <div class="user-tools-bar">
-            <button class="tool-btn" id="tool-search" onclick="window.selectUserTool('search')" title="Поиск">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <div id="file-preview"></div>
+
+          <!-- User Tools Selection -->
+          <div class="user-tools-row" style="padding: 0 12px 8px; display:flex; gap:8px;">
+            <button id="ut-search" class="user-tool-btn" onclick="window.toggleUserTool('search')" title="Поиск (Лупа)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
             </button>
-            <button class="tool-btn" id="tool-code" onclick="window.selectUserTool('code')" title="Кодинг">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M10 19l4-14"/></svg>
+            <button id="ut-code" class="user-tool-btn" onclick="window.toggleUserTool('code')" title="Кодинг (</>)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
             </button>
-            <button class="tool-btn" id="tool-image" onclick="window.selectUserTool('image')" title="Фото">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <button id="ut-image" class="user-tool-btn" onclick="window.toggleUserTool('image')" title="Фотография">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
             </button>
-            <button class="tool-btn" id="tool-music" onclick="window.selectUserTool('music')" title="Музыка">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <button id="ut-music" class="user-tool-btn" onclick="window.toggleUserTool('music')" title="Музыка (Ноты)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+            </button>
+            <button id="ut-thinking" class="user-tool-btn" onclick="window.toggleUserTool('thinking')"
+              title="Думать (Мозг)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 2.96-3.08A2.5 2.5 0 0 1 9.5 2z" />
+                <path
+                  d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-2.96-3.08A2.5 2.5 0 0 0 14.5 2z" />
+              </svg>
             </button>
           </div>
 
-          <div id="file-preview"></div>
           <div class="input-row">
             <textarea id="message-input" placeholder="Напишите сообщение..." rows="1" maxlength="2000"></textarea>
             <div class="input-actions">
               <input type="file" id="file-input" hidden multiple>
               <button class="btn-icon" onclick="$('#file-input').click()" title="Прикрепить файлы (до 3 МБ каждый)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="width:20px;height:20px">
+                  <path
+                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
+                </svg>
               </button>
-              <button class="btn primary small" onclick="window.sendMessage()">Отправить</button>
+              <button id="send-btn" class="btn primary small" onclick="window.sendMessage()">Отправить</button>
             </div>
           </div>
         </div>
@@ -86,7 +139,7 @@
         <h2 class="modal-title">Профиль</h2>
         <button class="btn-icon" onclick="closeModal('profile-modal')">×</button>
       </div>
-      
+
       <div class="profile-card">
         <div class="profile-avatar-large user-avatar">U</div>
         <div class="profile-card-info">
@@ -121,7 +174,8 @@
         <h2 class="modal-title">Изменить имя</h2>
         <button class="btn-icon" onclick="closeModal('change-nick-modal')">×</button>
       </div>
-      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Это имя будет отображаться вместо вашего никнейма. Оставьте пустым, чтобы использовать никнейм.</p>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Это имя будет отображаться вместо вашего
+        никнейма. Оставьте пустым, чтобы использовать никнейм.</p>
       <div class="input-group" style="margin-bottom:16px;">
         <input id="new-visible-name" class="input-field" type="text" placeholder="Отображаемое имя">
       </div>
@@ -158,11 +212,13 @@
         <h2 class="modal-title">Удалить аккаунт</h2>
         <button class="btn-icon" onclick="closeModal('delete-account-modal')">×</button>
       </div>
-      <p style="color:#ff6b7a;margin-bottom:16px;font-size:14px;">⚠️ Это действие необратимо! Все ваши данные, чаты и сообщения будут удалены навсегда.</p>
+      <p style="color:#ff6b7a;margin-bottom:16px;font-size:14px;">⚠️ Это действие необратимо! Все ваши данные, чаты и
+        сообщения будут удалены навсегда.</p>
       <div class="input-group" style="margin-bottom:16px;">
         <input id="delete-password" class="input-field" type="password" placeholder="Введите пароль для подтверждения">
       </div>
-      <button class="btn danger" style="width:100%;" onclick="window.confirmDeleteAccount()">Удалить аккаунт навсегда</button>
+      <button class="btn danger" style="width:100%;" onclick="window.confirmDeleteAccount()">Удалить аккаунт
+        навсегда</button>
     </div>
   </div>
 
@@ -182,15 +238,21 @@
       </div>
 
       <div class="god-main">
-        <div id="tickets-empty" class="god-empty-state"><p>Выберите тикет слева</p></div>
+        <div id="tickets-empty" class="god-empty-state">
+          <p>Выберите тикет слева</p>
+        </div>
 
         <div id="ticket-view" class="hidden" style="flex:1;display:flex;flex-direction:column;min-height:0;">
-          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div
+            style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div style="min-width:0;">
-              <div id="ticket-title" class="font-unbounded" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Тикет</div>
-              <div id="ticket-status" style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Статус: —</div>
+              <div id="ticket-title" class="font-unbounded"
+                style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Тикет</div>
+              <div id="ticket-status" style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Статус: —
+              </div>
             </div>
-            <button id="ticket-cancel-btn" class="btn danger small" onclick="window.cancelCurrentTicket()">Отменить</button>
+            <button id="ticket-cancel-btn" class="btn danger small"
+              onclick="window.cancelCurrentTicket()">Отменить</button>
           </div>
 
           <div id="ticket-messages" class="god-messages"></div>
@@ -201,12 +263,21 @@
               <div class="input-row">
                 <textarea id="ticket-input" placeholder="Сообщение в тикет..." rows="1" maxlength="2000"></textarea>
                 <div class="input-actions">
-                  <input type="file" id="ticket-file-input" hidden multiple onchange="window.handleTicketFileSelect(event)">
-                  <button class="btn-icon" onclick="document.getElementById('ticket-file-input').click()" title="Прикрепить файл (до 3 МБ)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48"/></svg>
+                  <input type="file" id="ticket-file-input" hidden multiple
+                    onchange="window.handleTicketFileSelect(event)">
+                  <button class="btn-icon" onclick="document.getElementById('ticket-file-input').click()"
+                    title="Прикрепить файл (до 3 МБ)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:20px;height:20px">
+                      <path
+                        d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
+                    </svg>
                   </button>
-                  <button id="ticket-send-btn" class="btn primary small" onclick="window.sendTicketMessage()" title="Отправить">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  <button id="ticket-send-btn" class="btn primary small" onclick="window.sendTicketMessage()"
+                    title="Отправить">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px">
+                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -228,11 +299,12 @@
         <h2 class="modal-title">Админ‑панель</h2>
         <button class="btn-icon" onclick="closeModal('admin-gate-modal')">×</button>
       </div>
-      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Введите пароль для доступа к админ‑панели.</p>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Введите пароль для доступа к
+        админ‑панели.</p>
       <div class="input-group" style="margin-bottom:16px;">
         <input id="admin-gate-password" class="input-field" type="password" placeholder="Пароль">
       </div>
-      <button class="btn primary" style="width:100%;" onclick="window.enterAdmin()">Войти</button>
+      <button class="btn primary" style="width:100%;" onclick="window.checkAdminGate()">Войти</button>
     </div>
   </div>
 
@@ -242,33 +314,41 @@
         <h2 class="modal-title">Условия использования</h2>
         <button class="btn-icon" onclick="closeModal('terms-modal')">×</button>
       </div>
-      
+
       <div class="terms-content">
         <p>Добро пожаловать в Mirra AI. Используя наш сервис, вы соглашаетесь со следующими условиями:</p>
-        
+
         <h3>1. Общие положения</h3>
-        <p>Mirra AI предоставляет доступ к различным моделям искусственного интеллекта для генерации текста и изображений. Сервис предоставляется «как есть» без каких-либо гарантий.</p>
-        
+        <p>Mirra AI предоставляет доступ к различным моделям искусственного интеллекта для генерации текста и
+          изображений. Сервис предоставляется «как есть» без каких-либо гарантий.</p>
+
         <h3>2. Использование сервиса</h3>
-        <p>Вы обязуетесь не использовать сервис для создания незаконного, вредоносного или оскорбительного контента. Мы оставляем за собой право заблокировать доступ при нарушении правил.</p>
-        
+        <p>Вы обязуетесь не использовать сервис для создания незаконного, вредоносного или оскорбительного контента. Мы
+          оставляем за собой право заблокировать доступ при нарушении правил.</p>
+
         <h3>3. Интеллектуальная собственность</h3>
-        <p>Контент, созданный с помощью Mirra AI, принадлежит вам, однако мы не несём ответственности за его использование третьими лицами.</p>
-        
+        <p>Контент, созданный с помощью Mirra AI, принадлежит вам, однако мы не несём ответственности за его
+          использование третьими лицами.</p>
+
         <h3>4. Подписки и платежи</h3>
-        <p>PRO-функции доступны только пользователям с активной подпиской. Отмена подписки не влечёт возврат средств за текущий период.</p>
-        
+        <p>PRO-функции доступны только пользователям с активной подпиской. Отмена подписки не влечёт возврат средств за
+          текущий период.</p>
+
         <h3>5. Ограничение ответственности</h3>
-        <p>Mirra AI не несёт ответственности за любые убытки, связанные с использованием сервиса. ИИ-модели могут допускать ошибки — всегда проверяйте важную информацию.</p>
-        
+        <p>Mirra AI не несёт ответственности за любые убытки, связанные с использованием сервиса. ИИ-модели могут
+          допускать ошибки — всегда проверяйте важную информацию.</p>
+
         <h3>6. Конфиденциальность</h3>
-        <p>Мы храним ваши данные в соответствии с политикой конфиденциальности. Ваши диалоги могут использоваться для улучшения качества сервиса в анонимизированном виде.</p>
-        
+        <p>Мы храним ваши данные в соответствии с политикой конфиденциальности. Ваши диалоги могут использоваться для
+          улучшения качества сервиса в анонимизированном виде.</p>
+
         <h3>7. Изменения условий</h3>
-        <p>Мы можем изменять эти условия в любое время. Продолжая использовать сервис после изменений, вы принимаете новые условия.</p>
+        <p>Мы можем изменять эти условия в любое время. Продолжая использовать сервис после изменений, вы принимаете
+          новые условия.</p>
       </div>
-      
-      <button class="btn primary" style="width:100%;margin-top:20px;" onclick="closeModal('terms-modal')">Понятно</button>
+
+      <button class="btn primary" style="width:100%;margin-top:20px;"
+        onclick="closeModal('terms-modal')">Понятно</button>
     </div>
   </div>
 
@@ -280,9 +360,11 @@
         <button class="btn-icon" onclick="closeModal('coding-result-modal')">×</button>
       </div>
       <div class="input-group" style="height:360px;">
-        <pre id="coding-result-body" class="input-field" style="height:360px;white-space:pre;overflow:auto;background:rgba(0,0,0,0.25);"></pre>
+        <pre id="coding-result-body" class="input-field"
+          style="height:360px;white-space:pre;overflow:auto;background:rgba(0,0,0,0.25);"></pre>
       </div>
-      <button class="btn secondary" style="width:100%;margin-top:12px;" onclick="navigator.clipboard?.writeText?.(document.getElementById('coding-result-body')?.textContent||'');window.showToast('Скопировано','success');">Скопировать</button>
+      <button class="btn secondary" style="width:100%;margin-top:12px;"
+        onclick="navigator.clipboard?.writeText?.(document.getElementById('coding-result-body')?.textContent||'');window.showToast('Скопировано','success');">Скопировать</button>
     </div>
   </div>
 
@@ -297,38 +379,9 @@
     </div>
   </div>
 
-  <!-- Rename Folder Modal -->
-  <div id="rename-folder-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title">Переименовать папку</h2>
-        <button class="btn-icon" onclick="closeModal('rename-folder-modal')">×</button>
-      </div>
-      <div class="input-group" style="margin-bottom:16px;">
-        <input id="rename-folder-input" class="input-field" type="text" placeholder="Название папки" maxlength="50">
-      </div>
-      <button class="btn primary" style="width:100%;" onclick="window.confirmRenameFolder()">Сохранить</button>
-    </div>
-  </div>
-
-  <!-- Confirm Delete Folder Modal -->
-  <div id="confirm-delete-folder-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title">Удалить папку?</h2>
-        <button class="btn-icon" onclick="closeModal('confirm-delete-folder-modal')">×</button>
-      </div>
-      <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;font-size:14px;">Чаты из папки не будут удалены, они переместятся в основной список.</p>
-      <div style="display:flex;gap:10px;">
-        <button class="btn secondary" style="flex:1;" onclick="closeModal('confirm-delete-folder-modal')">Отмена</button>
-        <button class="btn danger" style="flex:1;" onclick="window.confirmDeleteFolder()">Удалить</button>
-      </div>
-    </div>
-  </div>
-
   <div id="toast" class="toast"></div>
 
-  <script src="mistral-integration.js"></script>
   <script type="module" src="app.js"></script>
 </body>
+
 </html>

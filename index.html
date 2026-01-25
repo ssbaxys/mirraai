@@ -1,17 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
-<script>
-  // Резервируем имена функций в глобальном пространстве
-  window.openModal = window.openModal || function(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('active');
-  };
-  window.closeModal = window.closeModal || function(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
-  };
-</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mirra AI — Платформа нового поколения</title>
@@ -23,30 +13,128 @@
 
   <!-- Критические стили inline для быстрого first paint (уменьшаем FOUC) -->
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,-apple-system,sans-serif;background:#060606;color:#fff;min-height:100vh;overflow-x:hidden}
-    a{color:inherit;text-decoration:none}
-    .landing-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;background:rgba(6,6,6,.8);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(16px)}
-    .logo{display:flex;align-items:center;gap:10px;font-weight:700}
-    .logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#8e43ff,#6d00ff);display:flex;align-items:center;justify-content:center;font-weight:800}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:12px;border:1px solid transparent;font-weight:700;cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg,#8e43ff,#6d00ff);border-color:rgba(255,255,255,.1);color:#fff}
-    .btn.secondary{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);color:#fff}
-    .landing-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px}
-    .hero-title{font-weight:800;font-size:clamp(32px,7vw,64px);line-height:1.1;margin-bottom:24px}
-    .hero-subtitle{max-width:560px;color:rgba(255,255,255,.7);font-size:18px;line-height:1.6;margin-bottom:40px}
-    .hero-buttons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #060606;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none
+    }
+
+    .landing-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(6, 6, 6, .8);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      backdrop-filter: blur(16px)
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8e43ff, #6d00ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #8e43ff, #6d00ff);
+      border-color: rgba(255, 255, 255, .1);
+      color: #fff
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, .04);
+      border-color: rgba(255, 255, 255, .08);
+      color: #fff
+    }
+
+    .landing-hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px
+    }
+
+    .hero-title {
+      font-weight: 800;
+      font-size: clamp(32px, 7vw, 64px);
+      line-height: 1.1;
+      margin-bottom: 24px
+    }
+
+    .hero-subtitle {
+      max-width: 560px;
+      color: rgba(255, 255, 255, .7);
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 40px
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center
+    }
   </style>
 
   <!-- Основные стили (без FOUC: грузим как блокирующий stylesheet) -->
   <link rel="preload" href="styles.css" as="style">
   <link rel="stylesheet" href="styles.css">
-  <noscript><link rel="stylesheet" href="styles.css"></noscript>
+  <noscript>
+    <link rel="stylesheet" href="styles.css">
+  </noscript>
 
   <!-- Шрифты -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap"
+    rel="stylesheet">
 
 </head>
+
 <body>
   <nav class="landing-nav">
     <div class="logo">
@@ -61,7 +149,8 @@
       БУДУЩЕЕ <span class="gradient">ИСКУССТВЕННОГО</span><br>ИНТЕЛЛЕКТА — ЗДЕСЬ
     </h1>
     <p class="hero-subtitle">
-      Mirra AI — единая платформа для генерации текста и изображений. Выбирайте модель, ведите диалоги и создавайте шедевры.
+      Mirra AI — единая платформа для генерации текста и изображений. Выбирайте модель, ведите диалоги и создавайте
+      шедевры.
     </p>
     <div class="hero-buttons">
       <button class="btn primary" onclick="window.openModal('auth-modal')">Начать работу</button>
@@ -77,7 +166,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+"/>
+            <img alt="svgImg"
+              src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+" />
           </div>
           <div>
             <div class="model-card-name">Gemini 3 Flash</div>
@@ -91,7 +181,18 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <svg viewBox="0 0 129 91" style="width:100%;height:100%"><rect x="18.292" y="0" width="18.293" height="18.123" fill="#ffd800"/><rect x="91.473" y="0" width="18.293" height="18.123" fill="#ffd800"/><rect x="18.292" y="18.121" width="36.586" height="18.123" fill="#ffaf00"/><rect x="73.181" y="18.121" width="36.586" height="18.123" fill="#ffaf00"/><rect x="18.292" y="36.243" width="91.476" height="18.122" fill="#ff8205"/><rect x="18.292" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="54.883" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="91.473" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="0" y="72.504" width="54.89" height="18.123" fill="#e10500"/><rect x="73.181" y="72.504" width="54.89" height="18.123" fill="#e10500"/></svg>
+            <svg viewBox="0 0 129 91" style="width:100%;height:100%">
+              <rect x="18.292" y="0" width="18.293" height="18.123" fill="#ffd800" />
+              <rect x="91.473" y="0" width="18.293" height="18.123" fill="#ffd800" />
+              <rect x="18.292" y="18.121" width="36.586" height="18.123" fill="#ffaf00" />
+              <rect x="73.181" y="18.121" width="36.586" height="18.123" fill="#ffaf00" />
+              <rect x="18.292" y="36.243" width="91.476" height="18.122" fill="#ff8205" />
+              <rect x="18.292" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="54.883" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="91.473" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="0" y="72.504" width="54.89" height="18.123" fill="#e10500" />
+              <rect x="73.181" y="72.504" width="54.89" height="18.123" fill="#e10500" />
+            </svg>
           </div>
           <div>
             <div class="model-card-name">Mistral Small 3.2</div>
@@ -105,7 +206,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/color/48/deepseek.png" alt="deepseek" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/color/48/deepseek.png" alt="deepseek"
+              style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">DeepSeek V3.2</div>
@@ -119,7 +221,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png" alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png"
+              alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">GPT-5.1 Mini</div>
@@ -133,7 +236,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency/48/claude-ai.png" alt="claude-ai" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency/48/claude-ai.png" alt="claude-ai"
+              style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">Claude Haiku 4.5</div>
@@ -147,7 +251,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+"/>
+            <img alt="svgImg"
+              src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+" />
           </div>
           <div>
             <div class="model-card-name">Nano Banana</div>
@@ -162,7 +267,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency/48/claude-ai.png" alt="claude-ai" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency/48/claude-ai.png" alt="claude-ai"
+              style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">Claude Opus 4.5</div>
@@ -176,7 +282,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+"/>
+            <img alt="svgImg"
+              src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+" />
           </div>
           <div>
             <div class="model-card-name">Gemini 3 Pro</div>
@@ -190,7 +297,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/color/48/grok--v1.png" alt="grok--v1" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/color/48/grok--v1.png" alt="grok--v1"
+              style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">Grok 4.1 Thinking</div>
@@ -204,7 +312,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/color/48/grok--v1.png" alt="grok--v1" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/color/48/grok--v1.png" alt="grok--v1"
+              style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">Grok 4.1 Fast</div>
@@ -218,7 +327,18 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <svg viewBox="0 0 129 91" style="width:100%;height:100%"><rect x="18.292" y="0" width="18.293" height="18.123" fill="#ffd800"/><rect x="91.473" y="0" width="18.293" height="18.123" fill="#ffd800"/><rect x="18.292" y="18.121" width="36.586" height="18.123" fill="#ffaf00"/><rect x="73.181" y="18.121" width="36.586" height="18.123" fill="#ffaf00"/><rect x="18.292" y="36.243" width="91.476" height="18.122" fill="#ff8205"/><rect x="18.292" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="54.883" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="91.473" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="0" y="72.504" width="54.89" height="18.123" fill="#e10500"/><rect x="73.181" y="72.504" width="54.89" height="18.123" fill="#e10500"/></svg>
+            <svg viewBox="0 0 129 91" style="width:100%;height:100%">
+              <rect x="18.292" y="0" width="18.293" height="18.123" fill="#ffd800" />
+              <rect x="91.473" y="0" width="18.293" height="18.123" fill="#ffd800" />
+              <rect x="18.292" y="18.121" width="36.586" height="18.123" fill="#ffaf00" />
+              <rect x="73.181" y="18.121" width="36.586" height="18.123" fill="#ffaf00" />
+              <rect x="18.292" y="36.243" width="91.476" height="18.122" fill="#ff8205" />
+              <rect x="18.292" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="54.883" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="91.473" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="0" y="72.504" width="54.89" height="18.123" fill="#e10500" />
+              <rect x="73.181" y="72.504" width="54.89" height="18.123" fill="#e10500" />
+            </svg>
           </div>
           <div>
             <div class="model-card-name">Mistral Large 3</div>
@@ -232,7 +352,18 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <svg viewBox="0 0 129 91" style="width:100%;height:100%"><rect x="18.292" y="0" width="18.293" height="18.123" fill="#ffd800"/><rect x="91.473" y="0" width="18.293" height="18.123" fill="#ffd800"/><rect x="18.292" y="18.121" width="36.586" height="18.123" fill="#ffaf00"/><rect x="73.181" y="18.121" width="36.586" height="18.123" fill="#ffaf00"/><rect x="18.292" y="36.243" width="91.476" height="18.122" fill="#ff8205"/><rect x="18.292" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="54.883" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="91.473" y="54.37" width="18.293" height="18.123" fill="#fa500f"/><rect x="0" y="72.504" width="54.89" height="18.123" fill="#e10500"/><rect x="73.181" y="72.504" width="54.89" height="18.123" fill="#e10500"/></svg>
+            <svg viewBox="0 0 129 91" style="width:100%;height:100%">
+              <rect x="18.292" y="0" width="18.293" height="18.123" fill="#ffd800" />
+              <rect x="91.473" y="0" width="18.293" height="18.123" fill="#ffd800" />
+              <rect x="18.292" y="18.121" width="36.586" height="18.123" fill="#ffaf00" />
+              <rect x="73.181" y="18.121" width="36.586" height="18.123" fill="#ffaf00" />
+              <rect x="18.292" y="36.243" width="91.476" height="18.122" fill="#ff8205" />
+              <rect x="18.292" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="54.883" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="91.473" y="54.37" width="18.293" height="18.123" fill="#fa500f" />
+              <rect x="0" y="72.504" width="54.89" height="18.123" fill="#e10500" />
+              <rect x="73.181" y="72.504" width="54.89" height="18.123" fill="#e10500" />
+            </svg>
           </div>
           <div>
             <div class="model-card-name">Devstral 2</div>
@@ -246,7 +377,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png" alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png"
+              alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">GPT-5.2 Pro</div>
@@ -260,7 +392,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png" alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png"
+              alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">GPT-5.2 Chat</div>
@@ -274,7 +407,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png" alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency-systems-regular/48/FFFFFF/chatgpt.png"
+              alt="chatgpt" style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">GPT-5.1 Codex</div>
@@ -288,7 +422,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img width="48" height="48" src="https://img.icons8.com/fluency/48/claude-ai.png" alt="claude-ai" style="width:100%;height:100%;object-fit:contain;" />
+            <img width="48" height="48" src="https://img.icons8.com/fluency/48/claude-ai.png" alt="claude-ai"
+              style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div>
             <div class="model-card-name">Claude Sonnet 4.5</div>
@@ -302,7 +437,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div class="model-card-icon">
-            <img alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+"/>
+            <img alt="svgImg"
+              src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0ODBweCIgaGVpZ2h0PSI0ODBweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEMyOS4yMTEsMzUuMDkxLDI2LjcxNSwzNiwyNCwzNmMtNS4yMDIsMC05LjYxOS0zLjMxNy0xMS4yODMtNy45NDZsLTYuNTIyLDUuMDI1QzkuNTA1LDM5LjU1NiwxNi4yMjcsNDQsMjQsNDR6Ii8+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTAuNzkyLDIuMjM3LTIuMjMxLDQuMTY2LTQuMDg3LDUuNTcxYzAuMDAxLTAuMDAxLDAuMDAyLTAuMDAxLDAuMDAzLTAuMDAybDYuMTksNS4yMzhDMzYuOTcxLDM5LjIwNSw0NCwzNCw0NCwyNEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+" />
           </div>
           <div>
             <div class="model-card-name">Nano Banana Pro</div>
@@ -319,15 +455,18 @@
     <div class="features-grid">
       <div class="feature-card">
         <h3>Один интерфейс &mdash; десятки моделей</h3>
-        <p>Больше не нужно открывать десятки вкладок. Все крупные ИИ-провайдеры собраны в одном аккуратном интерфейсе Mirra AI.</p>
+        <p>Больше не нужно открывать десятки вкладок. Все крупные ИИ-провайдеры собраны в одном аккуратном интерфейсе
+          Mirra AI.</p>
       </div>
       <div class="feature-card">
         <h3>Текст, код и изображения</h3>
-        <p>Пишите тексты, генерируйте идеи, просите помощь с кодом и создавайте изображения &mdash; в рамках одного диалога.</p>
+        <p>Пишите тексты, генерируйте идеи, просите помощь с кодом и создавайте изображения &mdash; в рамках одного
+          диалога.</p>
       </div>
       <div class="feature-card">
         <h3>Гибкая маршрутизация запросов</h3>
-        <p>Вы сами выбираете модель под каждую задачу: быстрый ответ, глубокий анализ, программирование или генерация картинок.</p>
+        <p>Вы сами выбираете модель под каждую задачу: быстрый ответ, глубокий анализ, программирование или генерация
+          картинок.</p>
       </div>
     </div>
   </section>
@@ -345,7 +484,8 @@
       </div>
       <div class="how-card">
         <h3>Для кого это всё?</h3>
-        <p>Разработчики, контент-мейкеры, дизайнеры, SMM, студенты и просто любопытные &mdash; Mirra AI убирает рутину и даёт быстрый доступ к мощным моделям.</p>
+        <p>Разработчики, контент-мейкеры, дизайнеры, SMM, студенты и просто любопытные &mdash; Mirra AI убирает рутину и
+          даёт быстрый доступ к мощным моделям.</p>
       </div>
     </div>
   </section>
@@ -355,15 +495,18 @@
     <div class="faq-grid">
       <div class="faq-item">
         <h3>Mirra AI &mdash; это бесплатно?</h3>
-        <p>Базовые модели (FREE) доступны без оплат. PRO-модели могут требовать подписку или оплату по токенам &mdash; в демо-версии все запросы бесплатны.</p>
+        <p>Базовые модели (FREE) доступны без оплат. PRO-модели могут требовать подписку или оплату по токенам &mdash; в
+          демо-версии все запросы бесплатны.</p>
       </div>
       <div class="faq-item">
         <h3>Нужны ли ключи от провайдеров?</h3>
-        <p>В финальной версии вы сможете добавить собственные API-ключи, чтобы контролировать лимиты и конфиденциальность. В демо всё идёт через тестовый бекенд.</p>
+        <p>В финальной версии вы сможете добавить собственные API-ключи, чтобы контролировать лимиты и
+          конфиденциальность. В демо всё идёт через тестовый бекенд.</p>
       </div>
       <div class="faq-item">
         <h3>Где хранятся мои данные?</h3>
-        <p>Данные хранятся в Firebase Realtime Database (Google). В админ-панели доступен просмотр пользователей, чатов и тикетов.</p>
+        <p>Данные хранятся в Firebase Realtime Database (Google). В админ-панели доступен просмотр пользователей, чатов
+          и тикетов.</p>
       </div>
     </div>
   </section>
@@ -371,6 +514,8 @@
   <footer class="landing-footer">
     <div>2026 © Все права защищены.</div>
     <div style="margin-top:6px;">Сайт сделан @ssbaxys</div>
+    <div style="margin-top:6px;font-size:12px;"><a href="terms.html"
+        style="opacity:0.6;border-bottom:1px solid rgba(255,255,255,0.2);">Условия использования</a></div>
   </footer>
 
   <div id="auth-modal" class="modal-overlay">
@@ -390,7 +535,8 @@
           </div>
           <button type="submit" class="btn primary" style="width:100%;">Войти</button>
           <p style="text-align:center;font-size:13px;color:rgba(255,255,255,.5);">
-            Нет аккаунта? <a href="#" onclick="window.toggleAuthMode('register');return false;" style="color:#c6a6ff;">Регистрация</a>
+            Нет аккаунта? <a href="#" onclick="window.toggleAuthMode('register');return false;"
+              style="color:#c6a6ff;">Регистрация</a>
           </p>
         </div>
       </form>
@@ -404,14 +550,38 @@
             <input id="reg-password" class="input-field" type="password" placeholder="Пароль" required>
           </div>
           <div class="input-group">
-            <input id="reg-password-confirm" class="input-field" type="password" placeholder="Повторите пароль" required>
+            <input id="reg-password-confirm" class="input-field" type="password" placeholder="Повторите пароль"
+              required>
+          </div>
+          <div class="input-group">
+            <label
+              style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;">
+              <input type="checkbox" required style="accent-color:#8e43ff;">
+              <span>Я соглашаюсь с <a href="terms.html" target="_blank"
+                  style="color:#c6a6ff;text-decoration:underline;">Условиями использования</a></span>
+            </label>
           </div>
           <button type="submit" class="btn primary" style="width:100%;">Создать аккаунт</button>
           <p style="text-align:center;font-size:13px;color:rgba(255,255,255,.5);">
-            Есть аккаунт? <a href="#" onclick="window.toggleAuthMode('login');return false;" style="color:#c6a6ff;">Войти</a>
+            Есть аккаунт? <a href="#" onclick="window.toggleAuthMode('login');return false;"
+              style="color:#c6a6ff;">Войти</a>
           </p>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="admin-gate-modal" class="modal-overlay">
+    <div class="modal" style="max-width:320px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Вход в панель</h2>
+        <button class="btn-icon" onclick="window.closeModal('admin-gate-modal')">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <input id="admin-gate-password" type="password" class="input-field" placeholder="Пароль администратора"
+          onkeydown="if(event.key==='Enter') window.checkAdminGate()">
+        <button class="btn primary full" onclick="window.checkAdminGate()">Войти</button>
+      </div>
     </div>
   </div>
 
@@ -420,4 +590,5 @@
   <!-- app.js already relies on the explicit-render reCAPTCHA loaded in <head> -->
   <script type="module" src="app.js"></script>
 </body>
+
 </html>
