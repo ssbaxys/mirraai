@@ -820,7 +820,8 @@ window.initChat = function () {
         const user = DB.getCurrentUser();
         const m = MODELS[currentModel];
         if (user && m) {
-          const isAvail = getModelAvailability(currentModel);
+          const availMap = DB.getModelAvailability();
+          const isAvail = (currentModel in availMap) ? availMap[currentModel] : true;
           const isAllowed = (user.plan === 'pro') || !m.isPro;
 
           if (!isAvail || !isAllowed) {
