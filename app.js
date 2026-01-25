@@ -132,10 +132,7 @@ function getSafeModel(id) {
   return MODELS[id] || MODELS['mistral-small-3.2'];
 }
 
-window.getModelAvailability = function (id) {
-  const map = DB.getModelAvailability() || {};
-  return (id in map) ? !!map[id] : true;
-};
+
 
 function formatBytes(bytes) {
   const b = Number(bytes || 0);
