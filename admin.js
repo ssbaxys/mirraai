@@ -99,24 +99,21 @@ window.initAdmin = () => {
             }
         }
 
+        // Render immediately without debounce
         checkRights();
-        // ... existing throttle render logic ...
-        invalidateCache(); // Clear cache on any change
-        clearTimeout(_adminRenderTimeout);
-        _adminRenderTimeout = setTimeout(() => {
-            try {
-                if (document.getElementById('admin-stats')) renderAdminStats();
-                if (document.getElementById('users-table-body')) renderUsersTable();
-                if (document.getElementById('admin-tickets-list')) renderAdminTicketsList();
-                if (document.getElementById('admin-models')) renderAdminModels();
-                // God mode UI updates
-                if (typeof syncGodToolsUI === 'function') syncGodToolsUI();
-                if (document.getElementById('god-messages')) renderGodMessages();
-                if (document.getElementById('god-chats-list')) renderGodChats();
-            } catch (e) {
-                console.error(e);
-            }
-        }, 50); // 50ms debounce
+        invalidateCache();
+
+        try {
+            if (document.getElementById('admin-stats')) renderAdminStats();
+            if (document.getElementById('users-table-body')) renderUsersTable();
+            if (document.getElementById('admin-tickets-list')) renderAdminTicketsList();
+            if (document.getElementById('admin-models')) renderAdminModels();
+            if (typeof syncGodToolsUI === 'function') syncGodToolsUI();
+            if (document.getElementById('god-messages')) renderGodMessages();
+            if (document.getElementById('god-chats-list')) renderGodChats();
+        } catch (e) {
+            console.error(e);
+        }
     });
 };
 

@@ -288,7 +288,6 @@ const DB = {
     version: 0
   },
   online: false,
-  _commitTimer: null,
   _unsub: null,
   _listeners: new Set(),
 
