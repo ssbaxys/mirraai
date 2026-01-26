@@ -1481,7 +1481,10 @@ window.saveAdminSettings = () => {
 
     if (pwd) next.password = pwd;
     // if (sysPrompt !== undefined) next.systemPrompt = sysPrompt;
-    if (speed !== undefined) next.typewriterSpeed = parseInt(speed) || 10;
+    if (speed !== undefined) {
+        const parsed = parseInt(speed);
+        next.typewriterSpeed = isNaN(parsed) ? 10 : parsed;
+    }
 
     DB.saveAdminConfig(next);
     showToast('Настройки сохранены', 'success');

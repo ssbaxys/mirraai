@@ -1724,7 +1724,14 @@ function runTypewriter(el, content, finalHtml) {
   function type() {
     // Fetch speed dynamically on each character to handle config updates/loading
     const cfg = DB.getAdminConfig();
-    const speed = parseInt(cfg?.typewriterSpeed) || 10;
+    let val = parseInt(cfg?.typewriterSpeed);
+    if (isNaN(val)) val = 10;
+
+    // Allow 0 for instant, otherwise use val
+    const speed = val;
+
+    // Uncomment for debugging if needed, but the logic above fixes the "0 becomes 10" issue
+    // console.log('Typewriter speed:', speed); 
 
     if (i < content.length) {
       const partial = content.substring(0, i + 1);
