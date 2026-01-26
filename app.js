@@ -2183,13 +2183,20 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
 
     let ans = "";
     if (isGeminiFamily) {
-      const genAI = new GoogleGenAI({ apiKey: "AIzaSyB3W8nKy2uKYwvLN1hNjgx4lSGYb3zoOvY" });
+      const genAI = new GoogleGenAI({ apiKey: "AIzaSyAVP5rd-OU2Knql-T5YNmfNjHQaqQJIdnI" });
       const usedModel = "gemini-2.0-flash-exp";
       const contents = limitedHistory.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
       try {
         const result = await genAI.models.generateContent({ model: usedModel, config: { systemInstruction: { parts: [{ text: systemPrompt }] } }, contents: contents });
         ans = result.text();
-      } catch (e) { console.error(e); throw new Error(e.message); }
+      } catch (e) {
+        console.error(e);
+        if (String(e).includes('429') || String(e).includes('RESOURCE_EXHAUSTED')) {
+          ans = "429: Исчерпан лимит. Попробуйте позже.";
+        } else {
+          throw new Error(e.message);
+        }
+      }
     } else {
       // Image Placeholder Logic (Client Side)
       const isImageModel = modelId.includes('nano') || modelId.includes('image');
@@ -2223,14 +2230,16 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
         signal: window.currentAbortCtrl?.signal
       });
 
-      if (!response.ok) {
+      if (response.status === 429) {
+        ans = "429: Исчерпан лимит. Попробуйте позже.";
+      } else if (!response.ok) {
         const errorText = await response.text();
         console.error("Mistral API Error Body: ", errorText);
         throw new Error(`API Error ${response.status}: ${errorText}`);
+      } else {
+        const data = await response.json();
+        ans = data.choices?.[0]?.message?.content || "";
       }
-
-      const data = await response.json();
-      ans = data.choices?.[0]?.message?.content || "";
     }
 
     // Remove placeholder
@@ -2462,6 +2471,8 @@ window.renderModelDropdown = () => {
   const dd = $('#model-dropdown');
   if (!dd) return;
 
+  const prevScroll = dd.scrollTop || 0; // Capture scroll
+
   const currentModel = window.currentModel || 'mistral-small-3.2'; // Ensure scope access or pass arg if needed. global currentModel is available.
 
   const all = Object.values(MODELS).map(m => ({ ...m, available: getModelAvailability(m.id) }));
@@ -2489,6 +2500,8 @@ window.renderModelDropdown = () => {
       `;
   }).join('')}
   </div>`;
+
+  if (prevScroll) dd.scrollTop = prevScroll;
 };
 
 window.toggleModelDropdown = (e) => {
