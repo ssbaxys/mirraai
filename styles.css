@@ -3872,7 +3872,6 @@ input:checked+.toggle-slider:before {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
   user-select: none;
   pointer-events: none;
 }
@@ -3887,7 +3886,6 @@ input:checked+.toggle-slider:before {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
 }
 
 @keyframes highlightYellow {

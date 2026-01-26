@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+import { GoogleGenAI } from "https://esm.sh/@google/genai";
 
 // ==================== CONFIG ====================
 const firebaseConfig = {
@@ -446,8 +447,9 @@ const DB = {
     // map is { modelId: boolean }
     DB.state.modelAvailability = map;
     DB._notify();
-    // Save as object directly to avoid Firebase array conversion mess
-    await set(ref(db, `${REMOTE_PATH}/modelAvailability`), map);
+    // Save as array to avoid Firebase key issues (dots in keys)
+    const arr = Object.entries(map).map(([id, available]) => ({ id, available }));
+    await set(ref(db, `${REMOTE_PATH}/modelAvailability`), arr);
   },
 
   getCurrentUser: () => {
@@ -2097,8 +2099,9 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
   // I will use Mistral Key for "devstral"/"mistral" models.
 
   const isMistralFamily = modelId.includes('mistral') || modelId.includes('devstral') || modelId.includes('codestral') || modelId.includes('pixtral');
+  const isGeminiFamily = modelId.includes('gemini');
 
-  if (!isMistralFamily) {
+  if (!isMistralFamily && !isGeminiFamily) {
     // Mock for others
     const timerId = setTimeout(async () => {
       // Cleanup loading placeholder
@@ -2142,63 +2145,74 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
     // Use the passed systemPrompt
     const finalMessages = [{ role: 'system', content: systemPrompt }, ...limitedHistory];
 
-    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${MISTRAL_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: mapName || 'mistral-small-latest',
-        messages: finalMessages,
-        safe_prompt: false
-      }),
-      signal: window.currentAbortCtrl?.signal
-    });
+    let ans = "";
+    if (isGeminiFamily) {
+      const genAI = new GoogleGenAI({ apiKey: "AIzaSyB3W8nKy2uKYwvLN1hNjgx4lSGYb3zoOvY" });
+      const usedModel = "gemini-2.0-flash-exp";
+      const contents = limitedHistory.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+      try {
+        const result = await genAI.models.generateContent({ model: usedModel, config: { systemInstruction: { parts: [{ text: systemPrompt }] } }, contents: contents });
+        ans = result.text();
+      } catch (e) { console.error(e); throw new Error(e.message); }
+    } else {
+      const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${MISTRAL_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: mapName || 'mistral-small-latest',
+          messages: finalMessages,
+          safe_prompt: false
+        }),
+        signal: window.currentAbortCtrl?.signal
+      });
 
-    // Cleanup loading placeholder
-    if (window.__currentLoadingMsgId) {
-      await DB.deleteMessage(window.__currentLoadingMsgId);
-      window.__currentLoadingMsgId = null;
+      // Cleanup loading placeholder
+      if (window.__currentLoadingMsgId) {
+        await DB.deleteMessage(window.__currentLoadingMsgId);
+        window.__currentLoadingMsgId = null;
+      }
+
+      // Image Placeholder Logic (Client Side)
+      // If model name implies image, inject a temp message with "Generation..."
+      // Actually, normally we'd save a "pending" message to DB.
+      // But since this is a simple client, let's just assume we want the UI state.
+      // The user asked for "SVG icon and Generation... text".
+
+      // We can simulate this by manually appending to the DOM or saving a temp message.
+      // Saving to DB is safer.
+      let tempMsgId = null;
+      const isImageModel = modelId.includes('nano') || modelId.includes('image');
+
+      if (isImageModel) {
+        tempMsgId = nowId();
+        const pendingMsg = {
+          id: tempMsgId,
+          chatId,
+          userId: user.id,
+          role: 'assistant',
+          content: '',
+          model: modelId,
+          createdAt: Date.now(),
+          meta: { tool: 'image', state: 'pending' } // We use this to render the placeholder
+        };
+        await DB.saveMessage(pendingMsg);
+        renderMessages(true);
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Mistral API Error Body: ", errorText);
+        throw new Error(`API Error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Mistral API Response Data:", data);
+
+      ans = data.choices?.[0]?.message?.content || "";
     }
-
-    // Image Placeholder Logic (Client Side)
-    // If model name implies image, inject a temp message with "Generation..."
-    // Actually, normally we'd save a "pending" message to DB.
-    // But since this is a simple client, let's just assume we want the UI state.
-    // The user asked for "SVG icon and Generation... text".
-
-    // We can simulate this by manually appending to the DOM or saving a temp message.
-    // Saving to DB is safer.
-    let tempMsgId = null;
-    const isImageModel = modelId.includes('nano') || modelId.includes('image');
-
-    if (isImageModel) {
-      tempMsgId = nowId();
-      const pendingMsg = {
-        id: tempMsgId,
-        chatId,
-        userId: user.id,
-        role: 'assistant',
-        content: '',
-        model: modelId,
-        createdAt: Date.now(),
-        meta: { tool: 'image', state: 'pending' } // We use this to render the placeholder
-      };
-      await DB.saveMessage(pendingMsg);
-      renderMessages(true);
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Mistral API Error Body: ", errorText);
-      throw new Error(`API Error ${response.status}: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log("Mistral API Response Data:", data);
-
-    const ans = data.choices?.[0]?.message?.content || "";
 
     // Remove placeholder
     if (tempMsgId) {
