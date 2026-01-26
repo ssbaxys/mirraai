@@ -579,8 +579,21 @@ const DB = {
       });
 
       onValue(ref(db, `${REMOTE_PATH}/adminConfig`), (snap) => {
-        DB.state.adminConfig = snap.val() || null;
+        const conf = snap.val() || null;
+        DB.state.adminConfig = conf;
         DB._notify();
+
+        // Forced Reload Logic (Boolean)
+        if (conf && conf.reload === true) {
+          // Check if we just reloaded to avoid loop if the flag is still true
+          const lastReload = sessionStorage.getItem('forced_reload_ts');
+          const now = Date.now();
+          if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+            // If we haven't reloaded in the last 10 seconds, do it.
+            sessionStorage.setItem('forced_reload_ts', now);
+            location.reload();
+          }
+        }
       });
 
       onValue(ref(db, `${REMOTE_PATH}/version`), (snap) => {
@@ -2242,13 +2255,20 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
       }
     }
 
-    // Remove placeholder
+    // Remove placeholder (Image gen)
     if (tempMsgId) {
       await DB.deleteMessage(tempMsgId);
     }
 
+    // Explicitly cleanup loading placeholder (Text gen)
+    if (window.__currentLoadingMsgId) {
+      await DB.deleteMessage(window.__currentLoadingMsgId);
+      window.__currentLoadingMsgId = null;
+    }
+
     if (!ans) {
-      console.warn("Mistral API returned empty content", data);
+      // In case data is missing but no error thrown
+      console.warn("Mistral API returned empty content");
       throw new Error("Пустой ответ от модели (см. консоль)");
     }
 
@@ -2276,6 +2296,10 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
   } catch (err) {
     console.error(err);
     if (tempMsgId) await DB.deleteMessage(tempMsgId); // Cleanup on error
+    if (window.__currentLoadingMsgId) {
+      await DB.deleteMessage(window.__currentLoadingMsgId);
+      window.__currentLoadingMsgId = null;
+    }
 
     if (err.name === 'AbortError') {
       // Save stopped status

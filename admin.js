@@ -1492,8 +1492,17 @@ window.forceRefreshAllUsers = async () => {
     if (!await uiConfirm('ВНИМАНИЕ! Это перезагрузит страницу у ВСЕХ пользователей. Продолжить?')) return;
 
     const config = DB.getAdminConfig() || {};
-    DB.saveAdminConfig({ ...config, forceRefresh: Date.now() });
-    showToast('Сигнал обновлени отправлен', 'success');
+    // Set reload = true
+    await DB.saveAdminConfig({ ...config, reload: true });
+    showToast('Сигнал обновления отправлен (True)', 'success');
+
+    // Reset back to false after a delay to prevent infinite loops but ensure propagation
+    setTimeout(async () => {
+        const freshConfig = DB.getAdminConfig() || {};
+        await DB.saveAdminConfig({ ...freshConfig, reload: false });
+        showToast('Сигнал сброшен (False)', 'info');
+    }, 5000); // 5 seconds should be enough for instant sync
+
     closeModal('admin-settings-modal');
 };
 
