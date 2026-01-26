@@ -1722,26 +1722,25 @@ function runTypewriter(el, content, finalHtml) {
   let i = 0;
 
   function type() {
-    // Fetch speed dynamically on each character to handle config updates/loading
+    const frameStart = Date.now();
+
+    // Config check
     const cfg = DB.getAdminConfig();
     let val = parseInt(cfg?.typewriterSpeed);
     if (isNaN(val)) val = 10;
-
-    // Allow 0 for instant, otherwise use val
     const speed = val;
-
-    // Uncomment for debugging if needed, but the logic above fixes the "0 becomes 10" issue
-    // console.log('Typewriter speed:', speed); 
 
     if (i < content.length) {
       const partial = content.substring(0, i + 1);
-      // We parse partial markdown live.
       el.innerHTML = parseMarkdown(partial) + cursorHtml;
-
       i++;
-      setTimeout(type, speed);
 
-      // Auto-scroll while typing
+      const renderTime = Date.now() - frameStart;
+      const delay = Math.max(0, speed - renderTime);
+
+      setTimeout(type, delay);
+
+      // Auto-scroll logic...
       const container = document.getElementById('messages-container');
       if (container) {
         const nearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
@@ -1914,7 +1913,7 @@ function renderMessages(force = false) {
         // Wait! I missed the msgHtml construction block in my previous view.
         // I need to look at lines 1758 where `msgHtml` is defined.
 
-        if (textEl && !toolHtml) {
+        if (textEl && !toolHtml && !m.meta?.loading) {
           runTypewriter(textEl, content, parseMarkdown(content));
         }
       }
@@ -1953,13 +1952,14 @@ window.openCodingResult = (msgId) => {
 };
 
 window.sendMessage = async () => {
+  // Prevent double sending (Race Condition Fix)
+  if (window.isSending) return;
+
   // STOP Logic
   if (window.currentAbortCtrl) {
     window.currentAbortCtrl.abort();
     window.currentAbortCtrl = null;
     updateSendButtonState(false);
-    // Add system message about stop? Done in catch block usually, or here.
-    // If we abort, the fetch throws.
     return;
   }
 
@@ -1973,6 +1973,8 @@ window.sendMessage = async () => {
   const maxLen = plan === 'pro' ? 5000 : 2500;
   const content = String(input.value || '').trim().slice(0, maxLen);
   if (!content && !attachedFiles.length) return;
+
+  window.isSending = true; // Lock
 
   // create chat on first message
   if (!currentChatId) {
@@ -2101,7 +2103,11 @@ window.sendMessage = async () => {
     const adminCfg = DB.getAdminConfig();
     const finalSystemPrompt = chatPrompt || adminCfg?.systemPrompt || 'Ты — полезный ИИ-ассистент Mirra AI.';
 
-    callMistralAI(currentChatId, modelId, DB.getMessages(), finalSystemPrompt);
+    try {
+      await callMistralAI(currentChatId, modelId, DB.getMessages(), finalSystemPrompt);
+    } finally {
+      window.isSending = false; // Unlock
+    }
   } else {
     // Manual Mode: We define a "virtual" abort controller to handle the "Stop" click
     window.currentAbortCtrl = new AbortController();
@@ -2110,6 +2116,19 @@ window.sendMessage = async () => {
     // 2. An external message comes in (handled in renderMessages/DB.subscribe)
 
     // Safety timeout? (Optional, maybe 10 mins?)
+    window.isSending = false; // Unlock immediate for manual mode? Or keep locked? 
+    // Actually, manual mode implies waiting. But "isSending" prevents clicking "Send" again.
+    // In manual mode, the user waits for reply.
+    // If they click "Stop", currentAbortCtrl handles it.
+    // So unlocking here is correct so they CAN click stop.
+    // Wait, UpdateSendButtonState(true) changes button to Stop.
+    // isSending only prevents "Entry" to sendMessage.
+    // Stop button calls sendMessage? No, stop button usually has different handler?
+    // Let's check HTML click handler. 
+    // onclick="window.sendMessage()"
+    // If button is "Stop", it calls sendMessage.
+    // sendMessage checks if(window.currentAbortCtrl)... returns.
+    // So isSending must be FALSE if we want to allow Stop.
   }
 };
 
