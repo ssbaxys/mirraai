@@ -797,10 +797,36 @@ img[alt="grok--v1"] {
   margin: 0 auto;
 }
 
+
 .how-header {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 60px;
 }
+
+/* Typewriter Cursor */
+.typewriter-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--primary);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+
 
 .how-steps-grid {
   display: grid;

@@ -519,8 +519,18 @@ const DB = {
           DB.state[key] = transform ? transform(val) : toArray(val);
           DB._notify();
 
-          // Resolve boot as soon as users are loaded (critical for auth)
-          if (key === 'users' && !done) {
+          // Resolve boot as soon as users AND modelAvailability are loaded
+          // We track both using a counter or flags. But let's just make 'users' the primary flag,
+          // and ensure modelAvailability logic also checks if we should resolve if users are already loaded?
+          // Simpler: Just resolve. The listener below handles modelAvailability.
+          // User complaint "availability loads very slowly". 
+          // If we resolve BEFORE modelAvailability invalidates defaults, user sees one thing then another.
+          // Let's add 'modelAvailability' to the critical path.
+
+          if (key === 'users') {
+            window.__usersLoaded = true;
+          }
+          if (window.__usersLoaded && window.__modelsLoaded && !done) {
             done = true;
             DB.online = true;
             resolve(true);
@@ -555,6 +565,17 @@ const DB = {
         }
         DB.state.modelAvailability = finalMap;
         DB._notify();
+
+        if (document.getElementById('model-dropdown')?.classList.contains('active')) {
+          window.renderModelDropdown?.();
+        }
+
+        window.__modelsLoaded = true;
+        if (window.__usersLoaded && !done) {
+          done = true;
+          DB.online = true;
+          resolve(true);
+        }
       });
 
       onValue(ref(db, `${REMOTE_PATH}/adminConfig`), (snap) => {
@@ -2125,21 +2146,37 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
     return;
   }
 
+  let tempMsgId = null;
   try {
-    // Show "Thinking..." state (optional, reusing print tool or just UI state)
-    // Note: The UI shows "Thinking" if chat.thinking is true. 
-    // We can set it?
-    // setChatThinking(chatId, true, modelId); // This is in God Mode section... access it?
-    // Let's just rely on async wait.
-
     // Gather history
-    const history = allMessages.filter(m => m.chatId === chatId).map(m => ({
+    let history = allMessages.filter(m => m.chatId === chatId).map(m => ({
       role: m.role,
       content: m.content
     }));
 
-    // Limit history to last 10
-    const limitedHistory = history.slice(-10);
+    // Mistral Requirement: Last message MUST be from User.
+    // If the last message in history is from assistant (e.g. error or loading placeholder which shouldn't happen if filtered, but just in case), remove it.
+    // Note: 'loading' placeholder has content '[loading]' or meta.loading=true. We should probably filter those out earlier?
+    // DB.getMessages() includes all.
+    // Filter out internal messages or placeholders first.
+    history = history.filter(m => m.content !== '[loading]' && !m.meta?.loading);
+
+    // Ensure alternating or valid sequence. But most importantly, last one must be user.
+    // If last is assistant, we can't send it to Mistral as "next turn" unless we have a user prompt.
+    // However, if we are REGENERATING, we might have an assistant message. We should delete it or ignore it.
+    // For now, simple fix: Pop until user.
+    while (history.length > 0 && history[history.length - 1].role === 'assistant') {
+      history.pop();
+    }
+
+    if (history.length === 0) {
+      // Should not happen if triggered by send button, but handle safely
+      console.warn("No user messages to send to API");
+      return;
+    }
+
+    // Limit history to last 10 pairs (approx 20 messages)
+    const limitedHistory = history.slice(-20);
 
     // Use the passed systemPrompt
     const finalMessages = [{ role: 'system', content: systemPrompt }, ...limitedHistory];
@@ -2154,6 +2191,24 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
         ans = result.text();
       } catch (e) { console.error(e); throw new Error(e.message); }
     } else {
+      // Image Placeholder Logic (Client Side)
+      const isImageModel = modelId.includes('nano') || modelId.includes('image');
+      if (isImageModel) {
+        tempMsgId = nowId();
+        const pendingMsg = {
+          id: tempMsgId,
+          chatId,
+          userId: user.id,
+          role: 'assistant',
+          content: '',
+          model: modelId,
+          createdAt: Date.now(),
+          meta: { tool: 'image', state: 'pending' }
+        };
+        await DB.saveMessage(pendingMsg);
+        renderMessages(true);
+      }
+
       const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -2168,39 +2223,6 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
         signal: window.currentAbortCtrl?.signal
       });
 
-      // Cleanup loading placeholder
-      if (window.__currentLoadingMsgId) {
-        await DB.deleteMessage(window.__currentLoadingMsgId);
-        window.__currentLoadingMsgId = null;
-      }
-
-      // Image Placeholder Logic (Client Side)
-      // If model name implies image, inject a temp message with "Generation..."
-      // Actually, normally we'd save a "pending" message to DB.
-      // But since this is a simple client, let's just assume we want the UI state.
-      // The user asked for "SVG icon and Generation... text".
-
-      // We can simulate this by manually appending to the DOM or saving a temp message.
-      // Saving to DB is safer.
-      let tempMsgId = null;
-      const isImageModel = modelId.includes('nano') || modelId.includes('image');
-
-      if (isImageModel) {
-        tempMsgId = nowId();
-        const pendingMsg = {
-          id: tempMsgId,
-          chatId,
-          userId: user.id,
-          role: 'assistant',
-          content: '',
-          model: modelId,
-          createdAt: Date.now(),
-          meta: { tool: 'image', state: 'pending' } // We use this to render the placeholder
-        };
-        await DB.saveMessage(pendingMsg);
-        renderMessages(true);
-      }
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Mistral API Error Body: ", errorText);
@@ -2208,8 +2230,6 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
       }
 
       const data = await response.json();
-      console.log("Mistral API Response Data:", data);
-
       ans = data.choices?.[0]?.message?.content || "";
     }
 
@@ -2438,11 +2458,11 @@ function autoPickModelForUser(user, preferredId) {
   return 'mistral-small-3.2';
 }
 
-window.toggleModelDropdown = (e) => {
-  e?.stopPropagation?.();
+window.renderModelDropdown = () => {
   const dd = $('#model-dropdown');
   if (!dd) return;
-  if (dd.classList.contains('active')) { dd.classList.remove('active'); return; }
+
+  const currentModel = window.currentModel || 'mistral-small-3.2'; // Ensure scope access or pass arg if needed. global currentModel is available.
 
   const all = Object.values(MODELS).map(m => ({ ...m, available: getModelAvailability(m.id) }));
   const freeAvail = all.filter(m => m.available && !m.isPro);
@@ -2469,6 +2489,15 @@ window.toggleModelDropdown = (e) => {
       `;
   }).join('')}
   </div>`;
+};
+
+window.toggleModelDropdown = (e) => {
+  e?.stopPropagation?.();
+  const dd = $('#model-dropdown');
+  if (!dd) return;
+  if (dd.classList.contains('active')) { dd.classList.remove('active'); return; }
+
+  window.renderModelDropdown();
 
   dd.classList.add('active');
   const rect = $('#model-selector')?.getBoundingClientRect?.();
@@ -3038,7 +3067,8 @@ window.playNotificationSound = function () { // Export globally
     console.error('Audio error:', e);
   }
 };
-window.deleteChatUser = deleteChatUser;
+// Export deleteChatModal as deleteChatUser for compatibility with inline handlers if any
+window.deleteChatUser = window.deleteChatModal;
 
 // Global Exports for Admin & Utils
 window.DB = DB;
