@@ -584,16 +584,27 @@ const DB = {
         DB._notify();
 
         // Forced Reload Logic (Boolean)
-        if (conf && conf.reload === true) {
-          // Check if we just reloaded to avoid loop if the flag is still true
-          const lastReload = sessionStorage.getItem('forced_reload_ts');
-          const now = Date.now();
-          if (!lastReload || (now - parseInt(lastReload)) > 10000) {
-            // If we haven't reloaded in the last 10 seconds, do it.
-            sessionStorage.setItem('forced_reload_ts', now);
-            location.reload();
+        const checkReload = () => {
+          const conf = DB.state.adminConfig;
+          if (conf && conf.reload === true) {
+            const lastReload = sessionStorage.getItem('forced_reload_ts');
+            const now = Date.now();
+            // 40s debounce (longer than 30s pulse)
+            if (!lastReload || (now - parseInt(lastReload)) > 40000) {
+              sessionStorage.setItem('forced_reload_ts', now);
+              location.reload();
+            }
           }
+        };
+
+        if (conf && conf.reload === true) {
+          checkReload();
         }
+
+        // Also check when tab becomes visible (if it was throttled in background)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkReload();
+        });
       });
 
       onValue(ref(db, `${REMOTE_PATH}/version`), (snap) => {
@@ -1710,15 +1721,14 @@ function runTypewriter(el, content, finalHtml) {
   const cursorHtml = '<span class="typewriter-cursor"></span>';
   let i = 0;
 
-  // Read speed from config or default to 10
-  const cfg = DB.getAdminConfig();
-  const speed = parseInt(cfg?.typewriterSpeed) || 10;
-
   function type() {
+    // Fetch speed dynamically on each character to handle config updates/loading
+    const cfg = DB.getAdminConfig();
+    const speed = parseInt(cfg?.typewriterSpeed) || 10;
+
     if (i < content.length) {
       const partial = content.substring(0, i + 1);
       // We parse partial markdown live.
-      // Note: partial syntax (like a half-closed bold) will just render as raw text until closed.
       el.innerHTML = parseMarkdown(partial) + cursorHtml;
 
       i++;

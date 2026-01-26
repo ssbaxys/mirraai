@@ -1497,11 +1497,12 @@ window.forceRefreshAllUsers = async () => {
     showToast('Сигнал обновления отправлен (True)', 'success');
 
     // Reset back to false after a delay to prevent infinite loops but ensure propagation
+    // Extended to 30s to allow background tabs to wake up and catch the signal
     setTimeout(async () => {
         const freshConfig = DB.getAdminConfig() || {};
         await DB.saveAdminConfig({ ...freshConfig, reload: false });
         showToast('Сигнал сброшен (False)', 'info');
-    }, 5000); // 5 seconds should be enough for instant sync
+    }, 30000);
 
     closeModal('admin-settings-modal');
 };
