@@ -1454,8 +1454,14 @@ window.openAdminSettings = () => {
     if (promptInput) promptInput.value = (cfg && cfg.systemPrompt) || '';
 
     // speed
+    const val = (cfg && cfg.typewriterSpeed);
+    const speed = (val === undefined || isNaN(parseInt(val))) ? 10 : parseInt(val);
+
     const speedInput = document.getElementById('admin-typewriter-speed');
-    if (speedInput) speedInput.value = (cfg && cfg.typewriterSpeed) || 10;
+    if (speedInput) speedInput.value = speed;
+
+    const speedManual = document.getElementById('admin-typewriter-speed-manual');
+    if (speedManual) speedManual.value = speed;
 
     // clear pwd
     const pwdInput = document.getElementById('new-admin-password');

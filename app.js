@@ -578,33 +578,32 @@ const DB = {
         }
       });
 
+
+      // Forced Reload Logic
+      const checkReload = () => {
+        const conf = DB.state.adminConfig;
+        if (conf && conf.reload === true) {
+          const lastReload = sessionStorage.getItem('forced_reload_ts');
+          const now = Date.now();
+          if (!lastReload || (now - parseInt(lastReload)) > 40000) {
+            sessionStorage.setItem('forced_reload_ts', now);
+            const overlay = document.getElementById('refresh-overlay');
+            if (overlay) overlay.classList.add('active');
+            setTimeout(() => { window.location.reload(); }, 2000);
+          }
+        }
+      };
+
+      // Add visibility listener ONCE
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkReload();
+      });
+
       onValue(ref(db, `${REMOTE_PATH}/adminConfig`), (snap) => {
         const conf = snap.val() || null;
         DB.state.adminConfig = conf;
         DB._notify();
-
-        // Forced Reload Logic (Boolean)
-        const checkReload = () => {
-          const conf = DB.state.adminConfig;
-          if (conf && conf.reload === true) {
-            const lastReload = sessionStorage.getItem('forced_reload_ts');
-            const now = Date.now();
-            // 40s debounce (longer than 30s pulse)
-            if (!lastReload || (now - parseInt(lastReload)) > 40000) {
-              sessionStorage.setItem('forced_reload_ts', now);
-              location.reload();
-            }
-          }
-        };
-
-        if (conf && conf.reload === true) {
-          checkReload();
-        }
-
-        // Also check when tab becomes visible (if it was throttled in background)
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') checkReload();
-        });
+        checkReload();
       });
 
       onValue(ref(db, `${REMOTE_PATH}/version`), (snap) => {

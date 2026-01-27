@@ -325,10 +325,13 @@
         <div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
             <label style="font-size:12px;color:rgba(255,255,255,0.5);">Скорость печати (мс)</label>
-            <span id="speed-value" style="font-size:12px;color:var(--primary);">10ms</span>
           </div>
-          <input id="admin-typewriter-speed" type="range" class="input-field" min="0" max="100" step="1"
-            oninput="document.getElementById('speed-value').textContent = this.value + 'ms'">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="admin-typewriter-speed" type="range" class="input-field" min="0" max="5000" step="1" style="flex:1"
+              oninput="document.getElementById('admin-typewriter-speed-manual').value = this.value">
+            <input id="admin-typewriter-speed-manual" type="number" class="input-field" min="0" max="5000" placeholder="мс" style="width:80px;text-align:center;"
+              oninput="document.getElementById('admin-typewriter-speed').value = this.value">
+          </div>
         </div>
 
         <div style="padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
