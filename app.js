@@ -604,6 +604,60 @@ const DB = {
         DB.state.adminConfig = conf;
         DB._notify();
         checkReload();
+
+        // Maintenance Mode Check
+        const checkSafetyAccess = () => {
+          const cfg = DB.state.adminConfig;
+          // Create overlay if missing
+          let overlay = document.getElementById('maintenance-overlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'maintenance-overlay';
+            overlay.className = 'modal-overlay'; // Reusing modal-overlay styles for full screen block
+            overlay.style.zIndex = '9999';
+            overlay.style.background = '#060606'; // Opaque
+            overlay.style.flexDirection = 'column';
+            overlay.innerHTML = `
+              <div style="text-align:center; max-width:400px; padding:20px;">
+                <div style="font-size:48px; margin-bottom:16px;">🛠️</div>
+                <h2 style="margin-bottom:12px; font-size:24px;">Технические работы</h2>
+                <p style="color:rgba(255,255,255,0.6); margin-bottom:24px; line-height:1.5;">
+                  Мы проводим важное обновление системы. Пожалуйста, вернитесь позже.
+                </p>
+                <button class="btn secondary small" onclick="location.reload()">Проверить снова</button>
+                <div style="margin-top:32px; font-size:12px;">
+                  <a href="#" onclick="window.bypassMaintenance();return false;" style="color:#333; text-decoration:none;">Вы администратор?</a>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(overlay);
+          }
+
+          const isAdmin = ADMIN.get() || localStorage.getItem('mirra_admin_key');
+          if (cfg && cfg.maintenanceMode && !isAdmin) {
+            overlay.classList.add('active');
+            overlay.style.display = 'flex'; // Ensure visible on top of everything
+          } else {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+          }
+        };
+
+        // Expose bypass for the link
+        window.bypassMaintenance = () => {
+          const pwd = prompt('Введите пароль администратора:');
+          if (conf && conf.password && pwd === conf.password) {
+            ADMIN.set(true);
+            checkSafetyAccess();
+            // Automatically open admin settings/gate
+            if (window.openAdminSettings) window.openAdminSettings();
+            alert('Доступ разрешен. Вы вошли как администратор.');
+          } else {
+            alert('Неверный пароль');
+          }
+        };
+
+        checkSafetyAccess();
       });
 
       onValue(ref(db, `${REMOTE_PATH}/version`), (snap) => {
@@ -1734,10 +1788,8 @@ function runTypewriter(el, content, finalHtml) {
       el.innerHTML = parseMarkdown(partial) + cursorHtml;
       i++;
 
-      const renderTime = Date.now() - frameStart;
-      const delay = Math.max(0, speed - renderTime);
-
-      setTimeout(type, delay);
+      // Direct speed control without compensation for now to verify functionality
+      setTimeout(type, speed);
 
       // Auto-scroll logic...
       const container = document.getElementById('messages-container');
@@ -1810,7 +1862,17 @@ function renderMessages(force = false) {
     }
 
     const toolHtml = renderToolCard(m);
-    let content = String(m.content || '').trim();
+
+    // Safeguard: Handle potential structured content in DB (legacy/mistral)
+    let rawContent = m.content;
+    let content = "";
+    if (Array.isArray(rawContent)) {
+      content = rawContent.filter(p => p && p.type === 'text').map(p => p.text).join('\n');
+    } else if (typeof rawContent === 'object' && rawContent !== null) {
+      content = JSON.stringify(rawContent);
+    } else {
+      content = String(rawContent || '').trim();
+    }
 
     // Loading State Shimmer for Users
     if (m.meta?.loading) {
@@ -2137,7 +2199,7 @@ function updateSendButtonState(generating) {
   if (generating) {
     // Purple circle with black square
     // btn.className = 'btn-icon' ?? No, custom style
-    btn.innerHTML = '<div style="width:12px;height:12px;background:#000;"></div>';
+    btn.innerHTML = '<div style="width:12px;height:12px;background:#fff;"></div>';
     btn.style.width = '36px';
     btn.style.height = '36px';
     btn.style.padding = '0';
@@ -2171,26 +2233,17 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
 
   if (!isMistralFamily && !isGeminiFamily) {
     // Mock for others
-    const timerId = setTimeout(async () => {
-      // Cleanup loading placeholder
-      if (window.__currentLoadingMsgId) {
-        await DB.deleteMessage(window.__currentLoadingMsgId);
-        window.__currentLoadingMsgId = null;
-      }
-
-      const ai = { id: nowId(), chatId, userId: user.id, role: 'assistant', content: `[Demo] Ответ от ${MODELS[modelId]?.name} (API не подключено)`, model: modelId, createdAt: Date.now() };
-      DB.saveMessage(ai);
-      renderMessages(true);
-      window.currentAbortCtrl = null;
-      updateSendButtonState(false);
-    }, 1000);
-
-    // Support Abort for Mock
-    if (window.currentAbortCtrl?.signal) {
-      window.currentAbortCtrl.signal.addEventListener('abort', () => {
-        clearTimeout(timerId);
-      });
+    // Cleanup loading placeholder
+    if (window.__currentLoadingMsgId) {
+      await DB.deleteMessage(window.__currentLoadingMsgId);
+      window.__currentLoadingMsgId = null;
     }
+
+    const ai = { id: nowId(), chatId, userId: user.id, role: 'assistant', content: `[Demo] Ответ от ${MODELS[modelId]?.name} (API не подключено)`, model: modelId, createdAt: Date.now() };
+    DB.saveMessage(ai);
+    renderMessages(true);
+    window.currentAbortCtrl = null;
+    updateSendButtonState(false);
     return;
   }
 
@@ -2286,7 +2339,21 @@ async function callMistralAI(chatId, modelId, allMessages, systemPrompt) {
         throw new Error(`API Error ${response.status}: ${errorText}`);
       } else {
         const data = await response.json();
-        ans = data.choices?.[0]?.message?.content || "";
+        let rawContent = data.choices?.[0]?.message?.content;
+
+        // Handle structured content (e.g. Pixtral or tool calls returning array)
+        if (Array.isArray(rawContent)) {
+          // Join text parts
+          ans = rawContent
+            .filter(part => part.type === 'text')
+            .map(part => part.text)
+            .join('\n');
+        } else if (typeof rawContent === 'object' && rawContent !== null) {
+          // Fallback for unexpected object
+          ans = JSON.stringify(rawContent);
+        } else {
+          ans = rawContent || "";
+        }
       }
     }
 

@@ -99,6 +99,14 @@ window.initAdmin = () => {
             }
         }
 
+        // Check for stuck reloading state (fail-safe)
+        if (cfg && cfg.reload === true) {
+            // If we are admin and we see reload=true, it might be stuck. 
+            // We reset it to false immediately to stop the loop for everyone.
+            // (The admin's own app.js debounce handles their own reload loop).
+            DB.saveAdminConfig({ ...cfg, reload: false });
+        }
+
         // Render immediately without debounce
         checkRights();
         invalidateCache();
@@ -1463,6 +1471,13 @@ window.openAdminSettings = () => {
     const speedManual = document.getElementById('admin-typewriter-speed-manual');
     if (speedManual) speedManual.value = speed;
 
+    // Maintenance & Test Mode
+    const maintInput = document.getElementById('admin-maintenance-mode');
+    if (maintInput) maintInput.checked = !!(cfg && cfg.maintenanceMode);
+
+    const testInput = document.getElementById('admin-test-mode');
+    if (testInput) testInput.checked = !!(cfg && cfg.testMode);
+
     // clear pwd
     const pwdInput = document.getElementById('new-admin-password');
     if (pwdInput) pwdInput.value = '';
@@ -1477,20 +1492,23 @@ window.deleteGodMessage = async (id) => {
 window.saveAdminSettings = () => {
     if (!ADMIN.get()) return;
     const pwd = document.getElementById('new-admin-password')?.value;
-    // Removed system prompt from here if it was not in HTML, but keeping logic just in case
-    // const sysPrompt = document.getElementById('admin-system-prompt')?.value; 
     const speed = document.getElementById('admin-typewriter-speed')?.value;
+    const maint = document.getElementById('admin-maintenance-mode')?.checked;
+    const test = document.getElementById('admin-test-mode')?.checked;
 
     // Merge with existing config
     const current = DB.getAdminConfig() || {};
     const next = { ...current };
 
     if (pwd) next.password = pwd;
-    // if (sysPrompt !== undefined) next.systemPrompt = sysPrompt;
     if (speed !== undefined) {
         const parsed = parseInt(speed);
         next.typewriterSpeed = isNaN(parsed) ? 10 : parsed;
     }
+
+    // Save boolean flags
+    next.maintenanceMode = !!maint;
+    next.testMode = !!test;
 
     DB.saveAdminConfig(next);
     showToast('Настройки сохранены', 'success');
