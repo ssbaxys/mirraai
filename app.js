@@ -608,56 +608,39 @@ const DB = {
         // Maintenance Mode Check
         const checkSafetyAccess = () => {
           const cfg = DB.state.adminConfig;
-          // Create overlay if missing
-          let overlay = document.getElementById('maintenance-overlay');
-          if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'maintenance-overlay';
-            overlay.className = 'modal-overlay'; // Reusing modal-overlay styles for full screen block
-            overlay.style.zIndex = '9999';
-            overlay.style.background = '#060606'; // Opaque
-            overlay.style.flexDirection = 'column';
-            overlay.innerHTML = `
-              <div style="text-align:center; max-width:400px; padding:20px;">
-                <div style="font-size:48px; margin-bottom:16px;">🛠️</div>
-                <h2 style="margin-bottom:12px; font-size:24px;">Технические работы</h2>
-                <p style="color:rgba(255,255,255,0.6); margin-bottom:24px; line-height:1.5;">
-                  Мы проводим важное обновление системы. Пожалуйста, вернитесь позже.
-                </p>
-                <button class="btn secondary small" onclick="location.reload()">Проверить снова</button>
-                <div style="margin-top:32px; font-size:12px;">
-                  <a href="#" onclick="window.bypassMaintenance();return false;" style="color:#333; text-decoration:none;">Вы администратор?</a>
-                </div>
-              </div>
-            `;
-            document.body.appendChild(overlay);
-          }
-
           const isAdmin = ADMIN.get() || localStorage.getItem('mirra_admin_key');
-          console.log('[Maintenance] Check:', { enabled: cfg?.maintenanceMode, isAdmin });
 
           if (cfg && cfg.maintenanceMode && !isAdmin) {
-            overlay.classList.add('active');
-            overlay.style.display = 'flex'; // Ensure visible on top of everything
-            overlay.style.alignItems = 'center';
-            overlay.style.justifyContent = 'center';
-          } else {
-            overlay.classList.remove('active');
-            overlay.style.display = 'none';
-          }
-        };
-
-        // Expose bypass for the link
-        window.bypassMaintenance = () => {
-          const pwd = prompt('Введите пароль администратора:');
-          if (conf && conf.password && pwd === conf.password) {
-            ADMIN.set(true);
-            checkSafetyAccess();
-            // Automatically open admin settings/gate
-            if (window.openAdminSettings) window.openAdminSettings();
-            alert('Доступ разрешен. Вы вошли как администратор.');
-          } else {
-            alert('Неверный пароль');
+            // Check for bypass intent via URL param
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'admin_bypass') {
+              // Prevent loop if user cancels or fails
+              if (!window._bypassChecked) {
+                window._bypassChecked = true;
+                // Small delay to allow logic to settle
+                setTimeout(() => {
+                  const pwd = prompt('Введите пароль администратора:');
+                  if (conf && conf.password && pwd === conf.password) {
+                    ADMIN.set(true);
+                    alert('Доступ разрешен. Вы вошли как администратор.');
+                    // Remove param from URL
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, '', newUrl);
+                    // Open admin settings automatically
+                    if (typeof window.openAdminSettings === 'function') window.openAdminSettings();
+                    return; // Stay on page
+                  } else {
+                    alert('Неверный пароль');
+                    window.location.href = 'techworks.html';
+                  }
+                }, 500);
+              }
+            } else {
+              // Redirect to techworks page
+              if (!window.location.pathname.endsWith('techworks.html')) {
+                window.location.href = 'techworks.html';
+              }
+            }
           }
         };
 
@@ -2060,13 +2043,19 @@ window.sendMessage = async () => {
       model: currentModel,
       aion: isAion,
       mode: defaultMode,
-      createdAt: Date.now(),
       updatedAt: Date.now()
     };
-    await DB.saveChat(chat);
+
+    // Set ID immediately so when saveChat triggers notify/render, it highlights this chat
     currentChatId = id;
+
+    await DB.saveChat(chat);
+
     $('#welcome-screen')?.classList.add('hidden');
     $('#messages-area')?.classList.remove('hidden');
+
+    // Explicit render to ensure UI sync
+    renderChats();
   }
 
   const meta = {};
