@@ -634,9 +634,13 @@ const DB = {
           }
 
           const isAdmin = ADMIN.get() || localStorage.getItem('mirra_admin_key');
+          console.log('[Maintenance] Check:', { enabled: cfg?.maintenanceMode, isAdmin });
+
           if (cfg && cfg.maintenanceMode && !isAdmin) {
             overlay.classList.add('active');
             overlay.style.display = 'flex'; // Ensure visible on top of everything
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
           } else {
             overlay.classList.remove('active');
             overlay.style.display = 'none';
